@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+{% block title %}My Progress Dashboard – EduBridge{% endblock %}
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="page-hero page-hero-purple">
+  <div class="container">
+    <div class="page-hero-icon"><i class="fas fa-trophy"></i></div>
+    <h1>My Progress Dashboard</h1>
+    <p>Track your journey, earn XP, complete challenges, and unlock achievement badges</p>
+  </div>
+</div>
+
+<div class="container page-container">
+
+  <!-- Stats Row -->
+  <div class="gamification-stats-row" id="statsRow">
+    <div class="gstat-card gstat-xp">
+      <div class="gstat-icon"><i class="fas fa-bolt"></i></div>
+      <div class="gstat-val" id="gs-xp">—</div>
+      <div class="gstat-label">Total XP</div>
+    </div>
+    <div class="gstat-card gstat-level">
+      <div class="gstat-icon"><i class="fas fa-star"></i></div>
+      <div class="gstat-val" id="gs-level">—</div>
+      <div class="gstat-label">Level</div>
+    </div>
+    <div class="gstat-card gstat-streak">
+      <div class="gstat-icon"><i class="fas fa-fire"></i></div>
+      <div class="gstat-val" id="gs-streak">—</div>
+      <div class="gstat-label">Day Streak</div>
+    </div>
+    <div class="gstat-card gstat-tools">
+      <div class="gstat-icon"><i class="fas fa-check-circle"></i></div>
+      <div class="gstat-val" id="gs-tools">—</div>
+      <div class="gstat-label">Tools Used</div>
+    </div>
+    <div class="gstat-card gstat-weekly">
+      <div class="gstat-icon"><i class="fas fa-calendar-week"></i></div>
+      <div class="gstat-val" id="gs-weekly">—</div>
+      <div class="gstat-label">This Week XP</div>
+    </div>
+  </div>
+
+  <!-- Level Progress -->
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+      <div>
+        <h3 style="font-size:1.05rem;font-weight:700;"><i class="fas fa-level-up-alt" style="color:var(--primary);"></i> Level Progress</h3>
+        <div style="font-size:0.82rem;color:var(--gray-500);" id="levelProgressLabel">Loading...</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:1.5rem;font-weight:900;color:var(--primary);" id="levelBadge">—</div>
+        <div style="font-size:0.75rem;color:var(--gray-400);">Current Level</div>
+      </div>
+    </div>
+    <div style="height:12px;background:var(--gray-200);border-radius:6px;overflow:hidden;">
+      <div id="levelProgressBar" style="height:100%;background:linear-gradient(90deg,var(--primary),var(--secondary));border-radius:6px;width:0%;transition:width 1s ease;"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--gray-400);margin-top:0.3rem;">
+      <span id="levelXpCurrent">0 XP</span>
+      <span id="levelXpNext">Next Level: 500 XP</span>
+    </div>
+  </div>
+
+  <div class="gamification-grid">
+
+    <!-- Tool Completion Tracker -->
+    <div class="card gamification-section">
+      <h3 class="results-section-title"><i class="fas fa-tasks"></i> Tool Completion Tracker</h3>
+      <div id="toolTracker"></div>
+    </div>
+
+    <!-- Badges -->
+    <div class="card gamification-section">
+      <h3 class="results-section-title"><i class="fas fa-medal"></i> Achievement Badges</h3>
+      <div id="badgesContainer" class="badges-grid"></div>
+    </div>
+
+    <!-- Weekly Challenges -->
+    <div class="card gamification-section" style="grid-column: 1 / -1;">
+      <h3 class="results-section-title"><i class="fas fa-calendar-check"></i> Weekly Challenges</h3>
+      <div class="challenges-grid" id="challengesGrid"></div>
+    </div>
+
+    <!-- XP Breakdown Chart -->
+    <div class="card gamification-section">
+      <h3 class="results-section-title"><i class="fas fa-chart-bar"></i> XP Breakdown by Tool</h3>
+      <canvas id="xpChart" height="220"></canvas>
+    </div>
+
+    <!-- Journey Timeline -->
+    <div class="card gamification-section">
+      <h3 class="results-section-title"><i class="fas fa-road"></i> Your Journey So Far</h3>
+      <div id="journeyTimeline"></div>
+    </div>
+
+  </div>
+
+  <!-- Next Steps -->
+  <div class="card" style="margin-top:1.5rem;">
+    <h3 class="results-section-title"><i class="fas fa-rocket"></i> Keep Going — Unlock More Rewards</h3>
+    <div class="next-tools-grid" id="nextToolsGrid"></div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const ALL_TOOLS = [
+  { id: "career_navigator",   name: "Career Navigator",   xp: 100, icon: "fa-compass",          color: "#4f46e5", url: "/career-navigator" },
+  { id: "roi_calculator",     name: "ROI Calculator",     xp: 80,  icon: "fa-chart-line",        color: "#22c55e", url: "/roi-calculator" },
+  { id: "admission_predictor",name: "Admission Predictor",xp: 90,  icon: "fa-brain",             color: "#9333ea", url: "/admission-predictor" },
+  { id: "timeline_generator", name: "Timeline Generator", xp: 70,  icon: "fa-calendar-alt",      color: "#f97316", url: "/timeline-generator" },
+  { id: "loan_planner",       name: "Loan Planner",       xp: 120, icon: "fa-piggy-bank",        color: "#0ea5e9", url: "/loan-planner" },
+  { id: "sop_outline",        name: "SOP Generator",      xp: 85,  icon: "fa-pen-fancy",         color: "#0d9488", url: "/loan-planner" },
+  { id: "chatbot",            name: "AI Chatbot",         xp: 20,  icon: "fa-robot",             color: "#6366f1", url: "/chatbot" },
+];
+
+const ALL_BADGES = [
+  { id: "career_navigator",   name: "🧭 Navigator",        desc: "Used Career Navigator",         xp_req: 100 },
+  { id: "roi_calculator",     name: "📈 ROI Pro",           desc: "Calculated Education ROI",      xp_req: 80  },
+  { id: "admission_predictor",name: "🎯 Predictor",         desc: "Used Admission Predictor",      xp_req: 90  },
+  { id: "loan_planner",       name: "💰 Finance Wizard",    desc: "Planned Education Loan",        xp_req: 120 },
+  { id: "timeline_generator", name: "📅 Planner",           desc: "Generated Application Timeline",xp_req: 70  },
+  { id: "sop_outline",        name: "✍️ SOP Master",        desc: "Generated AI SOP Draft",        xp_req: 85  },
+  { id: "chatbot",            name: "🤖 AI User",           desc: "Chatted with EduMentor",        xp_req: 20  },
+  { id: "all_rounder",        name: "🌟 All-Rounder",       desc: "Used all 5 major tools",        xp_req: 460 },
+  { id: "level2",             name: "⚡ Level 2 Scholar",   desc: "Reached 500 XP",               xp_req: 500 },
+  { id: "streak3",            name: "🔥 3-Day Streak",      desc: "Visited 3 days in a row",       xp_req: 0   },
+  { id: "streak7",            name: "🏆 7-Day Warrior",     desc: "Visited 7 days in a row",       xp_req: 0   },
+];
+
+const WEEKLY_CHALLENGES = [
+  { id: "wc_career",   title: "Explore Your Career Path",  desc: "Run the AI Career Navigator with your full profile",        xp: 50,  tool: "career_navigator",    icon: "fa-compass",       color: "#4f46e5" },
+  { id: "wc_roi",      title: "Calculate Your ROI",         desc: "See how much your degree will earn over 20 years",          xp: 40,  tool: "roi_calculator",      icon: "fa-chart-line",    color: "#22c55e" },
+  { id: "wc_admit",    title: "Check Admission Chances",    desc: "Predict your chances at Reach, Target & Safe schools",      xp: 45,  tool: "admission_predictor", icon: "fa-brain",         color: "#9333ea" },
+  { id: "wc_loan",     title: "Plan Your Finances",         desc: "Compare lenders and check your loan eligibility",           xp: 60,  tool: "loan_planner",        icon: "fa-piggy-bank",    color: "#0ea5e9" },
+  { id: "wc_timeline", title: "Build Your Timeline",        desc: "Generate a personalized application roadmap",               xp: 35,  tool: "timeline_generator",  icon: "fa-calendar-alt",  color: "#f97316" },
+  { id: "wc_chat",     title: "Ask the AI Mentor",          desc: "Chat with EduMentor about any study abroad question",       xp: 20,  tool: "chatbot",             icon: "fa-robot",         color: "#6366f1" },
+];
+
+let xpChart = null;
+
+async function loadDashboard() {
+  const res = await fetch('/api/profile/get');
+  const data = await res.json();
+  if (!data.success) return;
+  const p = data.profile;
+
+  // Stats
+  document.getElementById('gs-xp').textContent = p.xp + ' XP';
+  document.getElementById('gs-level').textContent = 'Level ' + p.level;
+  document.getElementById('gs-streak').textContent = (p.streak || 0) + ' days';
+  document.getElementById('gs-tools').textContent = (p.completed_modules || []).length + '/' + ALL_TOOLS.length;
+  document.getElementById('gs-weekly').textContent = (p.weekly_xp || 0) + ' XP';
+
+  // Level progress
+  const xpInLevel = p.xp % 500;
+  const pct = Math.min(xpInLevel / 500 * 100, 100);
+  document.getElementById('levelProgressBar').style.width = pct + '%';
+  document.getElementById('levelBadge').textContent = 'Level ' + p.level;
+  document.getElementById('levelProgressLabel').textContent = `${xpInLevel} / 500 XP to Level ${p.level + 1}`;
+  document.getElementById('levelXpCurrent').textContent = p.xp + ' total XP';
+  document.getElementById('levelXpNext').textContent = `Next level: ${p.level * 500} XP`;
+
+  // Tool Tracker
+  const completed = p.completed_modules || [];
+  const tracker = document.getElementById('toolTracker');
+  tracker.innerHTML = ALL_TOOLS.map(t => {
+    const done = completed.includes(t.id);
+    return `<div class="tool-track-row ${done ? 'done' : ''}">
+      <div class="tool-track-icon" style="background:${t.color}20;color:${t.color};"><i class="fas ${t.icon}"></i></div>
+      <div class="tool-track-info">
+        <div class="tool-track-name">${t.name}</div>
+        <div class="tool-track-xp">+${t.xp} XP</div>
+      </div>
+      <div class="tool-track-status">
+        ${done
+          ? '<span class="track-done-badge"><i class="fas fa-check"></i> Done</span>'
+          : `<a href="${t.url}" class="btn btn-sm btn-outline" style="font-size:0.72rem;padding:0.25rem 0.6rem;">Start</a>`
+        }
+      </div>
+    </div>`;
+  }).join('');
+
+  // Badges
+  const earnedIds = (p.badges || []).map(b => b.id);
+  const streakBadges = [];
+  if ((p.streak || 0) >= 3) streakBadges.push('streak3');
+  if ((p.streak || 0) >= 7) streakBadges.push('streak7');
+  const allEarned = [...earnedIds, ...streakBadges];
+
+  document.getElementById('badgesContainer').innerHTML = ALL_BADGES.map(b => {
+    const earned = allEarned.includes(b.id);
+    return `<div class="badge-item ${earned ? 'earned' : 'locked'}">
+      <div class="badge-icon">${b.name.split(' ')[0]}</div>
+      <div class="badge-name">${b.name.substring(b.name.indexOf(' ')+1)}</div>
+      <div class="badge-desc">${earned ? b.desc : '🔒 ' + b.desc}</div>
+    </div>`;
+  }).join('');
+
+  // Weekly Challenges
+  document.getElementById('challengesGrid').innerHTML = WEEKLY_CHALLENGES.map(c => {
+    const done = completed.includes(c.tool);
+    return `<div class="challenge-card ${done ? 'challenge-done' : ''}">
+      <div class="challenge-header">
+        <div class="challenge-icon" style="background:${c.color}20;color:${c.color};"><i class="fas ${c.icon}"></i></div>
+        <div class="challenge-xp">+${c.xp} XP</div>
+      </div>
+      <div class="challenge-title">${c.title}</div>
+      <div class="challenge-desc">${c.desc}</div>
+      ${done
+        ? '<div class="challenge-complete"><i class="fas fa-check-circle"></i> Completed!</div>'
+        : `<a href="${ALL_TOOLS.find(t=>t.id===c.tool)?.url||'/'}" class="btn btn-sm btn-primary" style="margin-top:0.75rem;width:100%;">Start Challenge</a>`
+      }
+    </div>`;
+  }).join('');
+
+  // XP Chart
+  const toolsWithXp = ALL_TOOLS.filter(t => completed.includes(t.id));
+  if (xpChart) xpChart.destroy();
+  const ctx = document.getElementById('xpChart').getContext('2d');
+  if (toolsWithXp.length) {
+    xpChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: toolsWithXp.map(t => t.name),
+        datasets: [{
+          label: 'XP Earned',
+          data: toolsWithXp.map(t => t.xp),
+          backgroundColor: toolsWithXp.map(t => t.color + 'cc'),
+          borderRadius: 8,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.raw + ' XP' } } },
+        scales: { y: { beginAtZero: true, ticks: { callback: v => v + ' XP' }, grid: { color: 'rgba(0,0,0,0.04)' } }, x: { grid: { display: false }, ticks: { font: { size: 11 } } } }
+      }
+    });
+  } else {
+    ctx.canvas.parentNode.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--gray-400);"><i class="fas fa-chart-bar" style="font-size:2rem;margin-bottom:0.75rem;display:block;"></i>Complete tools to see your XP breakdown</div>';
+  }
+
+  // Journey Timeline
+  const journey = document.getElementById('journeyTimeline');
+  if (!completed.length) {
+    journey.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--gray-400);"><i class="fas fa-road" style="font-size:2rem;margin-bottom:0.75rem;display:block;"></i>Your journey begins when you use your first tool!</div>';
+  } else {
+    journey.innerHTML = '<div class="journey-track">' + completed.map((id, i) => {
+      const tool = ALL_TOOLS.find(t => t.id === id);
+      if (!tool) return '';
+      return `<div class="journey-step">
+        <div class="journey-dot" style="background:${tool.color};"><i class="fas ${tool.icon}"></i></div>
+        <div class="journey-info">
+          <div class="journey-tool">${tool.name}</div>
+          <div class="journey-xp">+${tool.xp} XP earned</div>
+        </div>
+      </div>`;
+    }).join('<div class="journey-connector"></div>') + '</div>';
+  }
+
+  // Next Tools to Try
+  const pending = ALL_TOOLS.filter(t => !completed.includes(t.id));
+  document.getElementById('nextToolsGrid').innerHTML = pending.length
+    ? pending.map(t => `<a href="${t.url}" class="next-tool-card">
+        <div class="next-tool-icon" style="color:${t.color};"><i class="fas ${t.icon}"></i></div>
+        <div class="next-tool-name">${t.name}</div>
+        <div class="next-tool-xp"><i class="fas fa-bolt"></i> +${t.xp} XP</div>
+      </a>`).join('')
+    : '<div style="text-align:center;padding:1.5rem;color:var(--success);font-weight:700;"><i class="fas fa-trophy" style="font-size:2rem;margin-bottom:0.5rem;display:block;"></i>🎉 Amazing! You\'ve completed all tools!</div>';
+}
+
+loadDashboard();
+</script>
+{% endblock %}

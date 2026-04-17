@@ -1,0 +1,339 @@
+{% extends "base.html" %}
+{% block title %}EduBridge AI – Your Study Abroad Copilot{% endblock %}
+
+{% block content %}
+<!-- ── Hero ──────────────────────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="hero-bg-shapes">
+    <div class="shape s1"></div>
+    <div class="shape s2"></div>
+    <div class="shape s3"></div>
+  </div>
+  <div class="container hero-content">
+    <div class="hero-badge animate-fade-up">
+      <i class="fas fa-robot"></i> AI-Powered Student Ecosystem
+    </div>
+    <h1 class="hero-title animate-fade-up delay-1">
+      Your Complete<br/>
+      <span class="gradient-text">Study Abroad</span><br/>
+      Companion
+    </h1>
+    <p class="hero-subtitle animate-fade-up delay-2">
+      From university discovery to education loan — EduBridge AI guides Indian students through every step of their higher education journey with personalized AI insights.
+    </p>
+    <div class="hero-cta animate-fade-up delay-3">
+      <a href="/career-navigator" class="btn btn-primary btn-lg">
+        <i class="fas fa-compass"></i> Start Your Journey
+      </a>
+      <a href="/chatbot" class="btn btn-outline btn-lg">
+        <i class="fas fa-robot"></i> Chat with AI Mentor
+      </a>
+    </div>
+    <div class="hero-stats animate-fade-up delay-4">
+      <div class="stat-item">
+        <span class="stat-num">50K+</span>
+        <span class="stat-label">Students Guided</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-num">200+</span>
+        <span class="stat-label">Universities Covered</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-num">₹500Cr+</span>
+        <span class="stat-label">Loans Facilitated</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span class="stat-num">15+</span>
+        <span class="stat-label">Countries</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── AI Features Grid ───────────────────────────────────────────────────── -->
+<section class="section features-section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-badge">AI-Powered Tools</div>
+      <h2 class="section-title">Everything You Need, <span class="gradient-text">All in One Place</span></h2>
+      <p class="section-subtitle">Our AI tools cover every stage of your higher education journey</p>
+    </div>
+
+    <div class="features-grid">
+      <a href="/career-navigator" class="feature-card card-hover animate-fade-up">
+        <div class="feature-icon icon-blue">
+          <i class="fas fa-compass"></i>
+        </div>
+        <div class="feature-content">
+          <h3>AI Career Navigator</h3>
+          <p>Get personalized university, country, and career recommendations based on your profile, GPA, and interests.</p>
+          <div class="feature-tags">
+            <span class="tag">Countries</span>
+            <span class="tag">Universities</span>
+            <span class="tag">Careers</span>
+          </div>
+        </div>
+        <div class="feature-arrow"><i class="fas fa-arrow-right"></i></div>
+      </a>
+
+      <a href="/roi-calculator" class="feature-card card-hover animate-fade-up delay-1">
+        <div class="feature-icon icon-green">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="feature-content">
+          <h3>ROI Calculator</h3>
+          <p>See real salary projections vs education costs. Make data-driven decisions about your investment in education.</p>
+          <div class="feature-tags">
+            <span class="tag">Salary Forecast</span>
+            <span class="tag">Payback Period</span>
+          </div>
+        </div>
+        <div class="feature-arrow"><i class="fas fa-arrow-right"></i></div>
+      </a>
+
+      <a href="/admission-predictor" class="feature-card card-hover animate-fade-up delay-2">
+        <div class="feature-icon icon-purple">
+          <i class="fas fa-brain"></i>
+        </div>
+        <div class="feature-content">
+          <h3>Admission Predictor</h3>
+          <p>Predict your admission chances with AI. Get reach, target, and safe university recommendations.</p>
+          <div class="feature-tags">
+            <span class="tag">Probability Score</span>
+            <span class="tag">Profile Analysis</span>
+          </div>
+        </div>
+        <div class="feature-arrow"><i class="fas fa-arrow-right"></i></div>
+      </a>
+
+      <a href="/timeline-generator" class="feature-card card-hover animate-fade-up delay-3">
+        <div class="feature-icon icon-orange">
+          <i class="fas fa-calendar-alt"></i>
+        </div>
+        <div class="feature-content">
+          <h3>Timeline Generator</h3>
+          <p>AI-generated personalized month-by-month application roadmap with milestones and deadlines.</p>
+          <div class="feature-tags">
+            <span class="tag">Deadlines</span>
+            <span class="tag">Milestones</span>
+          </div>
+        </div>
+        <div class="feature-arrow"><i class="fas fa-arrow-right"></i></div>
+      </a>
+
+      <a href="/loan-planner" class="feature-card card-hover animate-fade-up delay-4">
+        <div class="feature-icon icon-teal">
+          <i class="fas fa-piggy-bank"></i>
+        </div>
+        <div class="feature-content">
+          <h3>Loan Planner</h3>
+          <p>Check loan eligibility, compare lenders, calculate EMI, and explore scholarships — all powered by AI.</p>
+          <div class="feature-tags">
+            <span class="tag">Eligibility</span>
+            <span class="tag">EMI Calculator</span>
+            <span class="tag">Scholarships</span>
+          </div>
+        </div>
+        <div class="feature-arrow"><i class="fas fa-arrow-right"></i></div>
+      </a>
+
+      <a href="/chatbot" class="feature-card card-hover animate-fade-up delay-5 feature-card-highlight">
+        <div class="feature-icon icon-pink">
+          <i class="fas fa-robot"></i>
+        </div>
+        <div class="feature-content">
+          <h3>AI Mentor Chatbot</h3>
+          <p>24/7 conversational AI guide for all your study abroad questions — from SOPs to visa to scholarships.</p>
+          <div class="feature-tags">
+            <span class="tag">24/7 Available</span>
+            <span class="tag">Personalized</span>
+          </div>
+        </div>
+        <div class="feature-arrow"><i class="fas fa-arrow-right"></i></div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ── Journey Timeline ───────────────────────────────────────────────────── -->
+<section class="section journey-section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-badge">Your Roadmap</div>
+      <h2 class="section-title">The <span class="gradient-text">EduBridge Journey</span></h2>
+      <p class="section-subtitle">A structured path from exploration to loan disbursement</p>
+    </div>
+
+    <div class="journey-steps">
+      <div class="journey-step animate-fade-up">
+        <div class="step-number">01</div>
+        <div class="step-icon"><i class="fas fa-search"></i></div>
+        <h3>Discover</h3>
+        <p>Explore universities, countries, and programs tailored to your profile and goals.</p>
+      </div>
+      <div class="journey-arrow"><i class="fas fa-chevron-right"></i></div>
+      <div class="journey-step animate-fade-up delay-1">
+        <div class="step-number">02</div>
+        <div class="step-icon"><i class="fas fa-chart-bar"></i></div>
+        <h3>Evaluate</h3>
+        <p>Use AI tools to predict admission chances and calculate ROI of your education investment.</p>
+      </div>
+      <div class="journey-arrow"><i class="fas fa-chevron-right"></i></div>
+      <div class="journey-step animate-fade-up delay-2">
+        <div class="step-number">03</div>
+        <div class="step-icon"><i class="fas fa-file-alt"></i></div>
+        <h3>Apply</h3>
+        <p>Generate your personalized timeline, get SOP guidance, and track all deadlines.</p>
+      </div>
+      <div class="journey-arrow"><i class="fas fa-chevron-right"></i></div>
+      <div class="journey-step animate-fade-up delay-3">
+        <div class="step-number">04</div>
+        <div class="step-icon"><i class="fas fa-hand-holding-usd"></i></div>
+        <h3>Finance</h3>
+        <p>Get matched with the best education loan offers, compare EMIs, and apply seamlessly.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Gamification / XP Section ─────────────────────────────────────────── -->
+<section class="section gamification-section">
+  <div class="container">
+    <div class="gamification-card animate-fade-up">
+      <div class="gamification-left">
+        <div class="section-badge">Stay Motivated</div>
+        <h2>Earn XP & Badges As You Plan</h2>
+        <p>EduBridge turns your study abroad preparation into an engaging journey. Complete tools, maintain streaks, and unlock achievement badges.</p>
+        <div class="badge-showcase">
+          <div class="badge-item">
+            <div class="badge-icon">🧭</div>
+            <span>Navigator</span>
+          </div>
+          <div class="badge-item">
+            <div class="badge-icon">💹</div>
+            <span>ROI Pro</span>
+          </div>
+          <div class="badge-item">
+            <div class="badge-icon">🎯</div>
+            <span>Predictor</span>
+          </div>
+          <div class="badge-item">
+            <div class="badge-icon">💰</div>
+            <span>Finance Wizard</span>
+          </div>
+          <div class="badge-item badge-locked">
+            <div class="badge-icon">🔒</div>
+            <span>Scholar</span>
+          </div>
+        </div>
+        <a href="/career-navigator" class="btn btn-primary">Start Earning XP</a>
+      </div>
+      <div class="gamification-right">
+        <div class="xp-card">
+          <div class="xp-header">
+            <span class="xp-label">Your Progress</span>
+            <span class="xp-level" id="heroLevel">Level 1</span>
+          </div>
+          <div class="xp-bar-container">
+            <div class="xp-bar" id="heroXpBar" style="width: 0%"></div>
+          </div>
+          <div class="xp-values">
+            <span id="heroXpCurrent">0 XP</span>
+            <span>500 XP to Level 2</span>
+          </div>
+          <div class="streak-info">
+            <i class="fas fa-fire"></i>
+            <span id="heroStreak">0 day streak</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Testimonials ───────────────────────────────────────────────────────── -->
+<section class="section testimonials-section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-badge">Success Stories</div>
+      <h2 class="section-title">Students Who Made It</h2>
+    </div>
+    <div class="testimonials-grid">
+      <div class="testimonial-card animate-fade-up">
+        <div class="testimonial-quote"><i class="fas fa-quote-left"></i></div>
+        <p>"EduBridge's AI Navigator helped me shortlist universities in the US perfectly matching my 7.8 CGPA and budget. Got into UIUC for MS CS!"</p>
+        <div class="testimonial-author">
+          <div class="author-avatar">RK</div>
+          <div>
+            <strong>Rahul Kumar</strong>
+            <span>MS CS @ UIUC, 2024</span>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card animate-fade-up delay-1">
+        <div class="testimonial-quote"><i class="fas fa-quote-left"></i></div>
+        <p>"The ROI Calculator convinced me that MS in Data Science was worth the ₹45L investment. Now earning $130k at Microsoft. Best decision ever."</p>
+        <div class="testimonial-author">
+          <div class="author-avatar">PS</div>
+          <div>
+            <strong>Priya Sharma</strong>
+            <span>MS DS @ UMich, 2023</span>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card animate-fade-up delay-2">
+        <div class="testimonial-quote"><i class="fas fa-quote-left"></i></div>
+        <p>"Got my education loan of ₹45L through the Loan Planner with SBI at 9.5%. The eligibility checker and document checklist saved weeks of effort."</p>
+        <div class="testimonial-author">
+          <div class="author-avatar">AJ</div>
+          <div>
+            <strong>Arjun Joshi</strong>
+            <span>MBA @ Warwick, 2024</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA Section ────────────────────────────────────────────────────────── -->
+<section class="cta-section">
+  <div class="container">
+    <div class="cta-card animate-fade-up">
+      <h2>Ready to Begin Your Journey?</h2>
+      <p>Join thousands of Indian students planning smarter with AI. Free to use, no signup required.</p>
+      <div class="cta-buttons">
+        <a href="/career-navigator" class="btn btn-white btn-lg">
+          <i class="fas fa-rocket"></i> Get Started Free
+        </a>
+        <a href="/chatbot" class="btn btn-outline-white btn-lg">
+          <i class="fas fa-comments"></i> Talk to AI Mentor
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Load profile and update hero XP display
+  fetch('/api/profile/get')
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        const p = data.profile;
+        document.getElementById('heroXpCurrent').textContent = p.xp + ' XP';
+        document.getElementById('heroLevel').textContent = 'Level ' + p.level;
+        document.getElementById('heroStreak').textContent = p.streak + ' day streak';
+        const pct = Math.min((p.xp % 500) / 500 * 100, 100);
+        document.getElementById('heroXpBar').style.width = pct + '%';
+        document.getElementById('navXpVal').textContent = p.xp;
+      }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,730 @@
+{% extends "base.html" %}
+{% block title %}Loan Planner – EduBridge{% endblock %}
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="page-hero page-hero-teal">
+  <div class="container">
+    <div class="page-hero-icon"><i class="fas fa-piggy-bank"></i></div>
+    <h1>Education Loan Planner &amp; Financial Hub</h1>
+    <p>Comprehensive loan eligibility, lender comparison, EMI calculator with full amortization table, tax savings (80E), and SOP generator</p>
+    <div class="xp-reward-badge"><i class="fas fa-bolt"></i> Earn 120 XP</div>
+  </div>
+</div>
+
+<div class="container page-container">
+  <!-- Tabs -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('loan')"><i class="fas fa-hand-holding-usd"></i> Loan Eligibility</button>
+    <button class="tab-btn" onclick="switchTab('emi')"><i class="fas fa-calculator"></i> EMI Calculator</button>
+    <button class="tab-btn" onclick="switchTab('sop')"><i class="fas fa-pen-fancy"></i> SOP Generator</button>
+  </div>
+
+  <!-- ═══════════════ TAB 1: LOAN ELIGIBILITY ═══════════════ -->
+  <div id="tab-loan" class="tab-content tab-active">
+    <div class="tool-layout">
+      <div class="tool-form-panel">
+        <div class="card form-card">
+          <h2 class="form-title"><i class="fas fa-file-invoice-dollar"></i> Loan Eligibility Check</h2>
+          <form id="loanForm">
+            <div class="form-grid">
+              <div class="form-group form-group-full">
+                <label>Program & University *</label>
+                <input type="text" id="le_program" placeholder="e.g. MS Data Science – University of Michigan, USA" required />
+              </div>
+              <div class="form-group">
+                <label>Total Cost (INR) *</label>
+                <input type="number" id="le_total_cost" placeholder="e.g. 5000000" required />
+                <span class="form-hint">Tuition + living + visa + misc</span>
+              </div>
+              <div class="form-group">
+                <label>Loan Amount Needed (INR)</label>
+                <input type="number" id="le_loan_amount" placeholder="e.g. 4000000" />
+              </div>
+              <div class="form-group">
+                <label>Annual Family Income (INR)</label>
+                <input type="number" id="le_income" placeholder="e.g. 800000" />
+              </div>
+              <div class="form-group">
+                <label>Co-applicant Income (INR)</label>
+                <input type="number" id="le_co_income" placeholder="e.g. 600000 or 0" value="0" />
+              </div>
+              <div class="form-group">
+                <label>Employment Type</label>
+                <select id="le_employment">
+                  <option>Salaried</option>
+                  <option>Self-Employed / Business</option>
+                  <option>Government Employee</option>
+                  <option>Retired</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Collateral Available</label>
+                <select id="le_collateral">
+                  <option value="residential_property">Residential Property</option>
+                  <option value="commercial_property">Commercial Property</option>
+                  <option value="fd_insurance">FD / Insurance Policy</option>
+                  <option value="none">No Collateral (Unsecured)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Collateral Value (INR)</label>
+                <input type="number" id="le_collateral_value" placeholder="Market value..." />
+              </div>
+              <div class="form-group">
+                <label>CIBIL Score</label>
+                <select id="le_cibil">
+                  <option value="750+">750+ (Excellent)</option>
+                  <option value="700-749">700–749 (Good)</option>
+                  <option value="650-699">650–699 (Fair)</option>
+                  <option value="below_650">Below 650 (Poor)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Existing EMI Obligations (INR)</label>
+                <input type="number" id="le_existing_emi" placeholder="Monthly EMIs" value="0" />
+              </div>
+              <div class="form-group form-group-full">
+                <label>Academic Achievements / Scholarship</label>
+                <input type="text" id="le_academics" placeholder="e.g. GPA 3.8, GRE 325, ₹5L merit scholarship..." />
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-full" id="loanBtn">
+              <i class="fas fa-search"></i> Check Eligibility &amp; Compare Lenders
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div class="tool-results-panel" id="loanResults" style="display:none;">
+        <div class="results-loading" id="loanLoading">
+          <div class="loading-spinner"></div>
+          <p style="font-weight:600;">AI analyzing eligibility across all major lenders...</p>
+          <div class="loading-steps">
+            <div class="loading-step active">Calculating debt-to-income ratio</div>
+            <div class="loading-step">Checking collateral requirements</div>
+            <div class="loading-step">Comparing 10+ lenders</div>
+            <div class="loading-step">Generating approval strategy</div>
+          </div>
+        </div>
+        <div id="loanContent" style="display:none;">
+          <div class="eligibility-verdict" id="eligibilityVerdict"></div>
+          <div class="card results-section">
+            <h3 class="results-section-title"><i class="fas fa-balance-scale"></i> Lender Comparison Table</h3>
+            <div class="table-wrapper"><table class="lender-table" id="lenderTable"></table></div>
+          </div>
+          <div class="card results-section">
+            <h3 class="results-section-title"><i class="fas fa-chart-bar"></i> Interest Rate Comparison</h3>
+            <canvas id="lenderRateChart" height="180"></canvas>
+          </div>
+          <div class="card results-section">
+            <h3 class="results-section-title"><i class="fas fa-star"></i> AI Recommended Best Option</h3>
+            <div id="bestOption"></div>
+          </div>
+          <div class="card results-section">
+            <h3 class="results-section-title"><i class="fas fa-tasks"></i> Application Checklist</h3>
+            <div id="docChecklist"></div>
+          </div>
+          <div class="card results-section">
+            <h3 class="results-section-title"><i class="fas fa-chart-pie"></i> Loan Approval Strategy</h3>
+            <div id="approvalStrategy"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ TAB 2: EMI CALCULATOR ═══════════════ -->
+  <div id="tab-emi" class="tab-content" style="display:none;">
+    <div class="tool-layout">
+      <div class="tool-form-panel">
+        <div class="card form-card">
+          <h2 class="form-title"><i class="fas fa-calculator"></i> Advanced EMI Calculator</h2>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Loan Amount (INR) *</label>
+              <input type="number" id="emi_principal" placeholder="e.g. 3500000" oninput="calcEMI()" />
+              <span id="emi_principal_display" class="form-hint"></span>
+            </div>
+            <div class="form-group">
+              <label>Interest Rate (% p.a.) *</label>
+              <input type="range" id="emi_rate_slider" min="7" max="18" step="0.25" value="10.5" oninput="syncRate(this.value); calcEMI();" style="margin-top:0.5rem;" />
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.25rem;">
+                <span style="font-size:0.75rem;color:var(--gray-400);">7%</span>
+                <input type="number" id="emi_rate" step="0.25" min="7" max="18" value="10.5" oninput="syncSlider(this.value); calcEMI();" style="width:80px;text-align:center;border:1px solid var(--gray-300);padding:0.25rem;border-radius:6px;font-weight:700;color:var(--primary);" />
+                <span style="font-size:0.75rem;color:var(--gray-400);">18%</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Loan Tenure (Years)</label>
+              <input type="range" id="emi_tenure_slider" min="1" max="15" step="1" value="10" oninput="syncTenure(this.value); calcEMI();" style="margin-top:0.5rem;" />
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.25rem;">
+                <span style="font-size:0.75rem;color:var(--gray-400);">1 yr</span>
+                <input type="number" id="emi_tenure" min="1" max="15" value="10" oninput="syncTenureSlider(this.value); calcEMI();" style="width:80px;text-align:center;border:1px solid var(--gray-300);padding:0.25rem;border-radius:6px;font-weight:700;color:var(--primary);" />
+                <span style="font-size:0.75rem;color:var(--gray-400);">15 yrs</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Moratorium Period (Months)</label>
+              <select id="emi_moratorium" onchange="calcEMI()">
+                <option value="0">0 (No moratorium)</option>
+                <option value="12">12 months</option>
+                <option value="18">18 months</option>
+                <option value="24" selected>24 months</option>
+                <option value="36">36 months</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Processing Fee (%)</label>
+              <input type="number" id="emi_proc_fee" value="1" step="0.1" min="0" max="3" oninput="calcEMI()" />
+            </div>
+            <div class="form-group">
+              <label>Expected Salary Post-Graduation</label>
+              <input type="number" id="emi_salary" placeholder="e.g. 9500000 (INR/yr)" oninput="calcEMI()" />
+              <span class="form-hint">To calculate EMI-to-salary ratio</span>
+            </div>
+          </div>
+          <button class="btn btn-outline btn-full" onclick="calcEMI()"><i class="fas fa-sync-alt"></i> Refresh Calculations</button>
+        </div>
+
+        <!-- Scenario Comparison -->
+        <div class="card" style="margin-top:1rem;">
+          <h4 style="font-size:0.9rem;font-weight:700;margin-bottom:0.75rem;"><i class="fas fa-sliders-h" style="color:var(--primary);"></i> Compare Scenarios</h4>
+          <div id="scenarioCompare" class="scenario-mini-grid"></div>
+        </div>
+      </div>
+
+      <div class="tool-results-panel">
+        <!-- EMI Summary Cards -->
+        <div class="emi-summary-cards" id="emiSummaryCards">
+          <div class="emi-card emi-blue"><div class="emi-icon"><i class="fas fa-rupee-sign"></i></div><div id="emi_monthly_val">₹0</div><div>Monthly EMI</div></div>
+          <div class="emi-card emi-orange"><div class="emi-icon"><i class="fas fa-coins"></i></div><div id="emi_total_val">₹0</div><div>Total Repayment</div></div>
+          <div class="emi-card emi-red"><div class="emi-icon"><i class="fas fa-percentage"></i></div><div id="emi_interest_val">₹0</div><div>Total Interest</div></div>
+          <div class="emi-card emi-green"><div class="emi-icon"><i class="fas fa-leaf"></i></div><div id="emi_tax_val">₹0</div><div>Tax Savings (80E)</div></div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="emi-charts-row">
+          <div class="card" style="flex:1;">
+            <h4 class="chart-title"><i class="fas fa-chart-pie"></i> Payment Breakup</h4>
+            <div style="max-height:200px;display:flex;justify-content:center;"><canvas id="emiPieChart"></canvas></div>
+            <div id="emiLegend" class="chart-legend-custom"></div>
+          </div>
+          <div class="card" style="flex:1;">
+            <h4 class="chart-title"><i class="fas fa-chart-area"></i> Balance Reduction</h4>
+            <canvas id="emiBalanceChart" height="200"></canvas>
+          </div>
+        </div>
+
+        <!-- Affordability Check -->
+        <div class="card" id="affordabilityCard" style="margin-top:1rem;display:none;">
+          <h4 class="results-section-title"><i class="fas fa-check-circle"></i> Affordability Analysis</h4>
+          <div id="affordabilityContent"></div>
+        </div>
+
+        <!-- Full Amortization Table -->
+        <div class="card" style="margin-top:1rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+            <h4 class="results-section-title" style="margin-bottom:0;border:none;padding:0;"><i class="fas fa-table"></i> Full Amortization Schedule</h4>
+            <div style="display:flex;gap:0.5rem;">
+              <button class="btn btn-sm btn-outline" onclick="toggleAmortize()"><i class="fas fa-eye"></i> <span id="amortToggleLabel">Show All</span></button>
+              <button class="btn btn-sm btn-outline" onclick="exportAmortize()"><i class="fas fa-download"></i> CSV</button>
+            </div>
+          </div>
+          <div class="table-wrapper" id="amortTableWrap">
+            <table class="amort-table">
+              <thead><tr><th>Month</th><th>EMI</th><th>Principal</th><th>Interest</th><th>Balance</th><th>% Done</th></tr></thead>
+              <tbody id="amortTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ TAB 3: SOP GENERATOR ═══════════════ -->
+  <div id="tab-sop" class="tab-content" style="display:none;">
+    <div class="tool-layout">
+      <div class="tool-form-panel">
+        <div class="card form-card">
+          <h2 class="form-title"><i class="fas fa-pen-fancy"></i> AI SOP Generator</h2>
+          <form id="sopForm">
+            <div class="form-grid">
+              <div class="form-group form-group-full">
+                <label>Target Program &amp; University *</label>
+                <input type="text" id="sop_program" placeholder="e.g. MS in Computer Science at Carnegie Mellon University" required />
+              </div>
+              <div class="form-group form-group-full">
+                <label>Your Academic Background *</label>
+                <textarea id="sop_background" rows="3" placeholder="B.Tech CSE from IIT Delhi, GPA 8.7/10, specialization in AI/ML..." required></textarea>
+              </div>
+              <div class="form-group form-group-full">
+                <label>Work Experience &amp; Internships</label>
+                <textarea id="sop_experience" rows="2" placeholder="2 years as ML Engineer at Flipkart, internship at Google..."></textarea>
+              </div>
+              <div class="form-group form-group-full">
+                <label>Research / Projects</label>
+                <textarea id="sop_research" rows="2" placeholder="Published paper on NLP at IEEE, built end-to-end recommendation system..."></textarea>
+              </div>
+              <div class="form-group form-group-full">
+                <label>Why This Program? *</label>
+                <textarea id="sop_why" rows="3" placeholder="Specific faculty research, unique curriculum, lab opportunities that interest you..." required></textarea>
+              </div>
+              <div class="form-group form-group-full">
+                <label>Short-term Career Goal</label>
+                <input type="text" id="sop_goal_short" placeholder="e.g. AI Research Scientist at a FAANG company" />
+              </div>
+              <div class="form-group form-group-full">
+                <label>Long-term Career Vision</label>
+                <input type="text" id="sop_goal_long" placeholder="e.g. Found an AI startup focused on healthcare in India" />
+              </div>
+              <div class="form-group">
+                <label>SOP Length</label>
+                <select id="sop_length">
+                  <option value="500">500 words (concise)</option>
+                  <option value="800" selected>800 words (standard)</option>
+                  <option value="1000">1000 words (detailed)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Tone</label>
+                <select id="sop_tone">
+                  <option value="formal">Formal &amp; Professional</option>
+                  <option value="passionate" selected>Passionate &amp; Driven</option>
+                  <option value="storytelling">Narrative / Storytelling</option>
+                </select>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-full" id="sopBtn">
+              <i class="fas fa-magic"></i> Generate My SOP Outline + Draft
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div class="tool-results-panel" id="sopResults" style="display:none;">
+        <div class="results-loading" id="sopLoading">
+          <div class="loading-spinner"></div>
+          <p style="font-weight:600;">AI crafting your personalized SOP...</p>
+          <div class="loading-steps">
+            <div class="loading-step active">Analyzing your profile highlights</div>
+            <div class="loading-step">Structuring compelling narrative</div>
+            <div class="loading-step">Writing draft paragraphs</div>
+            <div class="loading-step">Polishing &amp; finalizing</div>
+          </div>
+        </div>
+        <div id="sopContent" style="display:none;">
+          <div class="sop-score-bar" id="sopScoreBar"></div>
+
+          <div class="card results-section">
+            <h3 class="results-section-title"><i class="fas fa-sitemap"></i> Structure &amp; Outline</h3>
+            <div id="sopOutline"></div>
+          </div>
+
+          <div class="card results-section">
+            <h3 class="results-section-title"><i class="fas fa-file-alt"></i> SOP Draft
+              <button class="btn btn-sm btn-outline" style="float:right;" onclick="copySOP()"><i class="fas fa-copy"></i> Copy</button>
+            </h3>
+            <div id="sopDraft" class="sop-draft-text"></div>
+          </div>
+
+          <div class="card results-section">
+            <h3 class="results-section-title"><i class="fas fa-exclamation-circle"></i> Common Mistakes to Avoid</h3>
+            <div id="sopMistakes"></div>
+          </div>
+
+          <div class="card results-section">
+            <h3 class="results-section-title"><i class="fas fa-star"></i> Power Phrases to Include</h3>
+            <div id="sopPhrases"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+let emiPieChart = null, emiBalanceChart = null;
+let amortData = [];
+let showAllRows = false;
+let lenderRateChartInst = null;
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+  event.target.classList.add('active');
+  document.getElementById('tab-' + tab).style.display = 'block';
+  if (tab === 'emi') { calcEMI(); }
+}
+
+// ─── LOAN ELIGIBILITY ─────────────────────────────────────────────────────────
+document.getElementById('loanForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('loanBtn');
+  btn.disabled = true; btn.innerHTML = '<div class="btn-spinner"></div> Analyzing...';
+  document.getElementById('loanResults').style.display = 'block';
+  document.getElementById('loanLoading').style.display = 'flex';
+  document.getElementById('loanContent').style.display = 'none';
+  document.getElementById('loanResults').scrollIntoView({ behavior: 'smooth' });
+
+  const payload = {
+    program: document.getElementById('le_program').value,
+    total_cost: document.getElementById('le_total_cost').value,
+    loan_amount: document.getElementById('le_loan_amount').value || document.getElementById('le_total_cost').value * 0.8,
+    family_income: document.getElementById('le_income').value,
+    co_income: document.getElementById('le_co_income').value || 0,
+    employment: document.getElementById('le_employment').value,
+    collateral: document.getElementById('le_collateral').value,
+    collateral_value: document.getElementById('le_collateral_value').value || 0,
+    cibil: document.getElementById('le_cibil').value,
+    existing_emi: document.getElementById('le_existing_emi').value || 0,
+    academics: document.getElementById('le_academics').value
+  };
+
+  try {
+    const res = await fetch('/api/loan-eligibility', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    const data = await res.json();
+    if (data.success) {
+      renderLoanResults(data.data);
+      document.getElementById('loanLoading').style.display = 'none';
+      document.getElementById('loanContent').style.display = 'block';
+      await awardXP('loan_planner');
+      showToast('Loan analysis complete! +120 XP', 'success');
+    } else { showToast('Error: ' + data.error, 'error'); document.getElementById('loanResults').style.display = 'none'; }
+  } catch(err) { showToast('Network error.', 'error'); document.getElementById('loanResults').style.display = 'none'; }
+  btn.disabled = false; btn.innerHTML = '<i class="fas fa-search"></i> Check Eligibility & Compare Lenders';
+});
+
+function renderLoanResults(d) {
+  const verdict = d.overall_eligibility || {};
+  const color = verdict.status === 'Highly Eligible' ? 'var(--success)' : verdict.status === 'Eligible' ? 'var(--primary)' : verdict.status === 'Conditionally Eligible' ? 'var(--warning)' : 'var(--danger)';
+  document.getElementById('eligibilityVerdict').innerHTML = `
+    <div class="verdict-banner" style="border-left:4px solid ${color};">
+      <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+        <div style="font-size:2.5rem;font-weight:900;color:${color};">${verdict.score || '?'}</div>
+        <div><div style="font-size:1.1rem;font-weight:700;color:${color};">${verdict.status}</div><p style="color:var(--gray-600);margin-top:0.25rem;font-size:0.875rem;">${verdict.summary}</p></div>
+        <div style="margin-left:auto;text-align:right;">
+          <div style="font-size:1.3rem;font-weight:800;color:var(--primary);">₹${((verdict.max_eligible_amount||0)/100000).toFixed(1)}L</div>
+          <div style="font-size:0.78rem;color:var(--gray-500);">Max Eligible Amount</div>
+        </div>
+      </div>
+    </div>`;
+
+  // Lender Table
+  const lenders = d.lenders || [];
+  const table = document.getElementById('lenderTable');
+  table.innerHTML = `<thead><tr><th>Lender</th><th>Type</th><th>Rate</th><th>Max Amt</th><th>Tenure</th><th>Collateral</th><th>Approval</th><th>Best For</th></tr></thead>
+    <tbody>${lenders.map(l => `<tr class="${l.recommended ? 'lender-recommended' : ''}">
+      <td><strong>${l.name}</strong>${l.recommended ? ' <span class="rec-star">⭐ Best</span>' : ''}</td>
+      <td><span class="lender-type-badge">${l.type}</span></td>
+      <td style="font-weight:700;color:${parseFloat(l.interest_rate)<11?'var(--success)':'var(--danger)'};">${l.interest_rate}%</td>
+      <td>₹${((l.max_amount||0)/100000).toFixed(0)}L</td>
+      <td>${l.max_tenure}</td>
+      <td><span class="collateral-badge collateral-${l.collateral_required === 'None' ? 'none' : 'yes'}">${l.collateral_required}</span></td>
+      <td><span class="approval-badge">${l.approval_time}</span></td>
+      <td style="font-size:0.78rem;color:var(--gray-600);">${l.best_for}</td>
+    </tr>`).join('')}</tbody>`;
+
+  document.getElementById('bestOption').innerHTML = d.recommended_lender ? `
+    <div class="best-lender-card">
+      <h4>🏆 ${d.recommended_lender.name}</h4>
+      <p>${d.recommended_lender.reason}</p>
+      <div class="best-lender-details">
+        <div><strong>Rate:</strong> ${d.recommended_lender.interest_rate}%</div>
+        <div><strong>EMI:</strong> ₹${(d.recommended_lender.monthly_emi||0).toLocaleString()}/month</div>
+        <div><strong>Total Repayment:</strong> ₹${((d.recommended_lender.total_repayment||0)/100000).toFixed(1)}L</div>
+        <div><strong>Tax Savings:</strong> ₹${((d.recommended_lender.tax_savings||0)/100000).toFixed(1)}L (Sec 80E)</div>
+      </div>
+      ${d.recommended_lender.steps ? `<div style="margin-top:0.75rem;"><strong>How to Apply:</strong><ol style="margin-top:0.5rem;padding-left:1.25rem;">${d.recommended_lender.steps.map(s=>`<li style="margin:0.25rem 0;">${s}</li>`).join('')}</ol></div>` : ''}
+    </div>` : '';
+
+  const docs = d.documents_required || [];
+  document.getElementById('docChecklist').innerHTML = `<div class="doc-checklist">${docs.map(doc => `
+    <label class="doc-item">
+      <input type="checkbox"> <span>${doc}</span>
+    </label>`).join('')}</div>`;
+
+  document.getElementById('approvalStrategy').innerHTML = '<ul class="insight-list">' +
+    (d.approval_tips || []).map(t => `<li class="insight-item"><i class="fas fa-check-circle" style="color:var(--success);"></i> ${t}</li>`).join('') + '</ul>';
+
+  // Lender Rate Comparison Chart
+  if (lenderRateChartInst) lenderRateChartInst.destroy();
+  const lctx = document.getElementById('lenderRateChart').getContext('2d');
+  const sortedLenders = [...lenders].sort((a,b) => parseFloat(a.interest_rate) - parseFloat(b.interest_rate));
+  const rateColors = sortedLenders.map(l => l.recommended ? 'rgba(79,70,229,0.85)' : 'rgba(14,165,233,0.6)');
+  lenderRateChartInst = new Chart(lctx, {
+    type: 'bar',
+    data: {
+      labels: sortedLenders.map(l => l.name),
+      datasets: [
+        {
+          label: 'Interest Rate (% p.a.)',
+          data: sortedLenders.map(l => parseFloat(l.interest_rate) || 0),
+          backgroundColor: rateColors,
+          borderRadius: 8,
+          borderSkipped: false
+        },
+        {
+          label: 'Max Loan (₹ Lakhs)',
+          data: sortedLenders.map(l => (l.max_amount || 0) / 100000),
+          backgroundColor: sortedLenders.map(l => l.recommended ? 'rgba(16,185,129,0.7)' : 'rgba(16,185,129,0.35)'),
+          borderRadius: 8,
+          borderSkipped: false,
+          yAxisID: 'y2'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'top' },
+        tooltip: {
+          callbacks: {
+            label: ctx => ctx.datasetIndex === 0
+              ? `Rate: ${ctx.raw}% p.a.`
+              : `Max: ₹${ctx.raw}L`
+          }
+        }
+      },
+      scales: {
+        y: {
+          title: { display: true, text: 'Interest Rate (%)', color: '#4f46e5' },
+          ticks: { callback: v => v + '%' },
+          min: 8, max: 16
+        },
+        y2: {
+          position: 'right',
+          title: { display: true, text: 'Max Loan (₹ Lakhs)', color: '#10b981' },
+          ticks: { callback: v => '₹' + v + 'L' },
+          grid: { drawOnChartArea: false }
+        }
+      }
+    }
+  });
+}
+
+// ─── EMI CALCULATOR ───────────────────────────────────────────────────────────
+function syncRate(v) { document.getElementById('emi_rate').value = v; }
+function syncSlider(v) { document.getElementById('emi_rate_slider').value = v; }
+function syncTenure(v) { document.getElementById('emi_tenure').value = v; }
+function syncTenureSlider(v) { document.getElementById('emi_tenure_slider').value = v; }
+
+function calcEMI() {
+  const P = parseFloat(document.getElementById('emi_principal').value) || 0;
+  const r = parseFloat(document.getElementById('emi_rate').value) || 10.5;
+  const n = parseInt(document.getElementById('emi_tenure').value) || 10;
+  const moratorium = parseInt(document.getElementById('emi_moratorium').value) || 0;
+  const procFeeRate = parseFloat(document.getElementById('emi_proc_fee').value) || 1;
+  const salary = parseFloat(document.getElementById('emi_salary').value) || 0;
+
+  const display = document.getElementById('emi_principal_display');
+  if (P > 0) display.textContent = '₹' + (P/100000).toFixed(2) + ' Lakhs'; else display.textContent = '';
+  if (!P) return;
+
+  const monthlyRate = r / 1200;
+  const totalMonths = n * 12;
+  const emi = P * monthlyRate * Math.pow(1+monthlyRate, totalMonths) / (Math.pow(1+monthlyRate, totalMonths) - 1);
+  const totalPaid = emi * totalMonths;
+  const totalInterest = totalPaid - P;
+  const procFee = P * procFeeRate / 100;
+  const taxSavings = totalInterest * 0.3; // 30% tax bracket savings on 80E
+
+  document.getElementById('emi_monthly_val').textContent = '₹' + emi.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  document.getElementById('emi_total_val').textContent = '₹' + (totalPaid/100000).toFixed(1) + 'L';
+  document.getElementById('emi_interest_val').textContent = '₹' + (totalInterest/100000).toFixed(1) + 'L';
+  document.getElementById('emi_tax_val').textContent = '₹' + (taxSavings/100000).toFixed(1) + 'L';
+
+  buildAmortizationTable(P, monthlyRate, emi, totalMonths, moratorium);
+  buildEmiCharts(P, totalInterest, procFee);
+  buildScenarioComparison(P, n, totalMonths);
+
+  if (salary > 0) {
+    const monthSalary = salary / 12;
+    const emiRatio = (emi / monthSalary * 100).toFixed(1);
+    document.getElementById('affordabilityCard').style.display = 'block';
+    const col = emiRatio < 30 ? 'var(--success)' : emiRatio < 50 ? 'var(--warning)' : 'var(--danger)';
+    document.getElementById('affordabilityContent').innerHTML = `
+      <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;">
+        <div style="text-align:center;"><div style="font-size:2rem;font-weight:900;color:${col};">${emiRatio}%</div><div style="font-size:0.75rem;color:var(--gray-500);">EMI-to-Income Ratio</div></div>
+        <div style="flex:1;min-width:200px;">
+          <div style="height:10px;background:linear-gradient(90deg,#22c55e 30%,#f59e0b 30% 50%,#ef4444 50%);border-radius:5px;margin-bottom:0.5rem;position:relative;">
+            <div style="position:absolute;top:14px;left:${Math.min(parseFloat(emiRatio),100)}%;transform:translateX(-50%);"><div style="width:2px;height:14px;background:${col};"></div><div style="font-size:0.72rem;font-weight:700;color:${col};white-space:nowrap;margin-top:2px;">${emiRatio}%</div></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--gray-400);margin-top:1.2rem;"><span>Comfortable &lt;30%</span><span>Caution 30-50%</span><span>Risky &gt;50%</span></div>
+        </div>
+        <div>
+          <p style="font-size:0.875rem;">${emiRatio < 30 ? '✅ <strong>Very manageable.</strong> Well within the safe zone.' : emiRatio < 50 ? '⚠️ <strong>Manageable</strong> but leave little buffer. Consider higher income stream.' : '❌ <strong>High risk.</strong> EMI significantly impacts budget. Consider longer tenure.'}</p>
+          <p style="font-size:0.8rem;color:var(--gray-500);margin-top:0.35rem;">Monthly Salary: ₹${monthSalary.toLocaleString(undefined,{maximumFractionDigits:0})} | EMI: ₹${emi.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',')}</p>
+        </div>
+      </div>`;
+  }
+}
+
+function buildAmortizationTable(P, r, emi, n, moratorium) {
+  amortData = [];
+  let bal = P;
+  const tbody = document.getElementById('amortTableBody');
+  const rows = [];
+
+  // Moratorium period (simple interest added to principal)
+  if (moratorium > 0) {
+    bal = P * (1 + r * moratorium);
+  }
+
+  for (let i = 1; i <= n; i++) {
+    const interest = bal * r;
+    const principal = emi - interest;
+    bal = Math.max(bal - principal, 0);
+    const pct = (((n - i) / n) * 100).toFixed(1);
+    amortData.push({ month: i, emi: emi, principal, interest, balance: bal, pct: 100 - parseFloat(pct) });
+    rows.push(`<tr>
+      <td style="color:var(--gray-500);">${i}</td>
+      <td>₹${emi.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',')}</td>
+      <td style="color:var(--primary);">₹${principal.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',')}</td>
+      <td style="color:var(--danger);">₹${interest.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',')}</td>
+      <td style="font-weight:600;">₹${(bal/100000).toFixed(2)}L</td>
+      <td><div style="display:flex;align-items:center;gap:0.5rem;"><div style="height:6px;flex:1;background:var(--gray-200);border-radius:3px;overflow:hidden;"><div style="height:100%;width:${(100-bal/P*100).toFixed(0)}%;background:var(--primary);border-radius:3px;"></div></div>${(100-bal/P*100).toFixed(0)}%</div></td>
+    </tr>`);
+    if (bal <= 0) break;
+  }
+  tbody.innerHTML = showAllRows ? rows.join('') : rows.slice(0, 12).join('') + (rows.length > 12 ? `<tr><td colspan="6" style="text-align:center;color:var(--gray-400);font-style:italic;">... ${rows.length - 12} more rows — click "Show All" to view</td></tr>` : '');
+}
+
+function toggleAmortize() {
+  showAllRows = !showAllRows;
+  document.getElementById('amortToggleLabel').textContent = showAllRows ? 'Show Less' : 'Show All';
+  calcEMI();
+}
+
+function exportAmortize() {
+  let csv = 'Month,EMI,Principal,Interest,Balance,Progress\n';
+  amortData.forEach(r => { csv += `${r.month},${r.emi.toFixed(2)},${r.principal.toFixed(2)},${r.interest.toFixed(2)},${r.balance.toFixed(2)},${r.pct.toFixed(1)}%\n`; });
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'loan_amortization.csv'; a.click();
+  showToast('Amortization schedule exported!', 'success');
+}
+
+function buildEmiCharts(P, interest, procFee) {
+  if (emiPieChart) emiPieChart.destroy();
+  emiPieChart = new Chart(document.getElementById('emiPieChart').getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Principal', 'Total Interest', 'Processing Fee'],
+      datasets: [{ data: [P, interest, procFee], backgroundColor: ['#4f46e5', '#ef4444', '#f59e0b'], borderWidth: 0 }]
+    },
+    options: { cutout: '72%', plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `₹${(ctx.raw/100000).toFixed(1)}L` } } } }
+  });
+  document.getElementById('emiLegend').innerHTML = [
+    { label: 'Principal', color: '#4f46e5', val: P },
+    { label: 'Interest', color: '#ef4444', val: interest },
+    { label: 'Processing Fee', color: '#f59e0b', val: procFee }
+  ].map(i => `<div class="legend-item"><span style="background:${i.color};width:12px;height:12px;border-radius:50%;display:inline-block;margin-right:0.4rem;"></span>${i.label}: ₹${(i.val/100000).toFixed(1)}L</div>`).join('');
+
+  if (emiBalanceChart) emiBalanceChart.destroy();
+  const step = Math.max(1, Math.floor(amortData.length / 24));
+  const labels = amortData.filter((_,i) => i % step === 0).map(r => 'M' + r.month);
+  const balances = amortData.filter((_,i) => i % step === 0).map(r => (r.balance/100000).toFixed(1));
+  emiBalanceChart = new Chart(document.getElementById('emiBalanceChart').getContext('2d'), {
+    type: 'line',
+    data: { labels, datasets: [{ data: balances, borderColor: '#4f46e5', backgroundColor: 'rgba(79,70,229,0.1)', fill: true, tension: 0.4, pointRadius: 2 }] },
+    options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: v => '₹' + v + 'L' } }, x: { ticks: { maxTicksLimit: 8 } } } }
+  });
+}
+
+function buildScenarioComparison(P, n, months) {
+  const rates = [8.5, 10.5, 12.5, 15];
+  document.getElementById('scenarioCompare').innerHTML = rates.map(rate => {
+    const mr = rate/1200;
+    const emi = P * mr * Math.pow(1+mr, months) / (Math.pow(1+mr, months) - 1);
+    const total = emi * months;
+    const isActive = parseFloat(document.getElementById('emi_rate').value) === rate;
+    return `<div class="scenario-mini ${isActive?'active-scenario':''}" onclick="document.getElementById('emi_rate').value='${rate}';syncSlider('${rate}');calcEMI();">
+      <div class="sm-rate">${rate}%</div>
+      <div class="sm-emi">₹${(emi/1000).toFixed(1)}K/mo</div>
+      <div class="sm-total">₹${(total/100000).toFixed(1)}L total</div>
+    </div>`;
+  }).join('');
+}
+
+// ─── SOP GENERATOR ────────────────────────────────────────────────────────────
+document.getElementById('sopForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('sopBtn');
+  btn.disabled = true; btn.innerHTML = '<div class="btn-spinner"></div> Writing your SOP...';
+  document.getElementById('sopResults').style.display = 'block';
+  document.getElementById('sopLoading').style.display = 'flex';
+  document.getElementById('sopContent').style.display = 'none';
+  document.getElementById('sopResults').scrollIntoView({ behavior: 'smooth' });
+
+  const payload = {
+    program: document.getElementById('sop_program').value,
+    background: document.getElementById('sop_background').value,
+    experience: document.getElementById('sop_experience').value,
+    research: document.getElementById('sop_research').value,
+    why_program: document.getElementById('sop_why').value,
+    goal_short: document.getElementById('sop_goal_short').value,
+    goal_long: document.getElementById('sop_goal_long').value,
+    length: document.getElementById('sop_length').value,
+    tone: document.getElementById('sop_tone').value
+  };
+
+  try {
+    const res = await fetch('/api/sop-outline', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    const data = await res.json();
+    if (data.success) {
+      renderSOP(data.data);
+      document.getElementById('sopLoading').style.display = 'none';
+      document.getElementById('sopContent').style.display = 'block';
+      showToast('SOP draft generated!', 'success');
+    } else { showToast('Error: ' + data.error, 'error'); document.getElementById('sopResults').style.display = 'none'; }
+  } catch(err) { showToast('Network error.', 'error'); document.getElementById('sopResults').style.display = 'none'; }
+  btn.disabled = false; btn.innerHTML = '<i class="fas fa-magic"></i> Generate My SOP Outline + Draft';
+});
+
+function renderSOP(d) {
+  const score = d.quality_score || 78;
+  const sc = score >= 80 ? '#22c55e' : score >= 60 ? '#f59e0b' : '#ef4444';
+  document.getElementById('sopScoreBar').innerHTML = `
+    <div class="card" style="margin-bottom:1rem;">
+      <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;">
+        <div style="text-align:center;"><div style="font-size:2.5rem;font-weight:900;color:${sc};">${score}</div><div style="font-size:0.78rem;color:var(--gray-500);">SOP STRENGTH</div></div>
+        <div style="flex:1;">
+          <div style="height:10px;background:var(--gray-200);border-radius:5px;overflow:hidden;"><div style="height:100%;width:${score}%;background:${sc};border-radius:5px;"></div></div>
+          <p style="margin-top:0.5rem;font-size:0.875rem;color:var(--gray-600);">${d.quality_assessment || ''}</p>
+        </div>
+      </div>
+    </div>`;
+
+  const outline = d.structure || d.outline || [];
+  document.getElementById('sopOutline').innerHTML = outline.map((sec, i) => `
+    <div class="sop-section">
+      <div class="sop-sec-header"><span class="sop-sec-num">${i+1}</span> ${sec.section || sec.title || sec}</div>
+      ${sec.content ? `<p class="sop-sec-desc">${sec.content}</p>` : ''}
+      ${sec.key_points ? `<ul>${sec.key_points.map(p=>`<li>${p}</li>`).join('')}</ul>` : ''}
+      ${sec.word_count ? `<span class="sop-word-count">~${sec.word_count} words</span>` : ''}
+    </div>`).join('');
+
+  const draft = d.draft || d.full_draft || '';
+  document.getElementById('sopDraft').innerHTML = draft.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>').replace(/^/, '<p>').replace(/$/, '</p>');
+
+  document.getElementById('sopMistakes').innerHTML = '<ul class="insight-list">' +
+    (d.common_mistakes || []).map(m => `<li class="insight-item" style="color:var(--danger);"><i class="fas fa-times-circle"></i> ${m}</li>`).join('') + '</ul>';
+
+  document.getElementById('sopPhrases').innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:0.5rem;">` +
+    (d.power_phrases || []).map(p => `<span class="phrase-chip">"${p}"</span>`).join('') + '</div>';
+}
+
+function copySOP() {
+  const text = document.getElementById('sopDraft').innerText;
+  navigator.clipboard.writeText(text).then(() => showToast('SOP copied to clipboard!', 'success'));
+}
+
+// Init
+calcEMI();
+</script>
+{% endblock %}

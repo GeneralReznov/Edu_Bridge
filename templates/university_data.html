@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+{% block title %}University Data Sync – EduBridge AI{% endblock %}
+{% block head %}
+<style>
+.ud-hero{background:linear-gradient(135deg,#0f172a,#1e3a5f,#1d4ed8);color:#fff;padding:52px 0 36px;text-align:center;}
+.ud-hero h1{font-size:2rem;font-weight:800;margin-bottom:6px;}
+.ud-badge{display:inline-block;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:4px 14px;font-size:.8rem;font-weight:600;margin-bottom:14px;}
+.ud-main{max-width:1200px;margin:0 auto;padding:28px 16px;}
+
+/* Search bar */
+.search-bar-row{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+.search-input{flex:1;min-width:200px;padding:11px 16px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:.9rem;font-family:inherit;}
+.search-input:focus{outline:none;border-color:#1d4ed8;}
+.filter-select{padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:.85rem;font-family:inherit;background:#fff;}
+.filter-select:focus{outline:none;border-color:#1d4ed8;}
+.search-btn{padding:11px 20px;background:#1d4ed8;color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.sync-btn{padding:10px 16px;background:#f0f0ff;color:#4f46e5;border:1.5px solid #c7d2fe;border-radius:10px;font-weight:600;cursor:pointer;font-size:.85rem;}
+.sync-btn:hover{background:#e0e7ff;}
+
+/* Result count */
+.result-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;font-size:.88rem;color:#64748b;}
+.result-meta strong{color:#1e293b;}
+.view-toggle{display:flex;gap:6px;}
+.vt-btn{padding:6px 12px;border:1.5px solid #e2e8f0;border-radius:8px;background:#fff;font-size:.8rem;cursor:pointer;transition:.2s;}
+.vt-btn.active{background:#1d4ed8;color:#fff;border-color:#1d4ed8;}
+
+/* University Cards */
+.uni-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
+.uni-card{background:#fff;border-radius:14px;box-shadow:0 3px 16px rgba(0,0,0,.07);overflow:hidden;transition:.2s;cursor:pointer;}
+.uni-card:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,0,0,.12);}
+.uc-top{padding:16px 18px 12px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:flex-start;}
+.uc-top h3{font-size:.95rem;font-weight:800;color:#1e293b;margin:0 0 3px;}
+.uc-country{font-size:.78rem;color:#64748b;display:flex;align-items:center;gap:4px;}
+.qs-badge{background:#1d4ed8;color:#fff;font-size:.72rem;font-weight:700;padding:3px 8px;border-radius:6px;}
+.uc-body{padding:12px 18px 14px;}
+.uc-stat-row{display:flex;justify-content:space-between;font-size:.82rem;padding:4px 0;border-bottom:1px solid #f8fafc;}
+.uc-stat-row:last-child{border:none;}
+.uc-stat-row .sl{color:#64748b;}
+.uc-stat-row .sv{font-weight:700;color:#1e293b;}
+.uc-tags{margin-top:10px;display:flex;flex-wrap:wrap;gap:4px;}
+.uc-tag{background:#f0f0ff;color:#4f46e5;font-size:.7rem;font-weight:600;padding:2px 7px;border-radius:10px;}
+.uc-actions{display:flex;gap:6px;padding:10px 18px;background:#f8fafc;border-top:1px solid #f1f5f9;}
+.uc-btn{flex:1;padding:7px;border-radius:8px;font-size:.78rem;font-weight:600;cursor:pointer;border:1.5px solid transparent;transition:.2s;}
+.uc-btn.detail{background:#fff;border-color:#e2e8f0;color:#374151;}
+.uc-btn.detail:hover{border-color:#1d4ed8;color:#1d4ed8;}
+.uc-btn.bookmark{background:#fff;border-color:#e2e8f0;color:#374151;}
+.uc-btn.bookmark.active{background:#fef9c3;border-color:#fcd34d;color:#d97706;}
+.uc-btn.compare{background:#1d4ed8;color:#fff;}
+
+/* Detail Modal */
+.ud-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9000;overflow-y:auto;padding:20px;}
+.ud-modal.open{display:flex;align-items:flex-start;justify-content:center;}
+.ud-modal-box{background:#fff;border-radius:20px;max-width:760px;width:100%;margin:auto;overflow:hidden;}
+.udm-header{background:linear-gradient(135deg,#0f172a,#1d4ed8);color:#fff;padding:24px 28px;}
+.udm-header h2{font-size:1.3rem;font-weight:800;margin:0 0 6px;}
+.udm-body{padding:24px 28px;}
+.udm-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+.udm-stat{background:#f8fafc;border-radius:10px;padding:12px;}
+.udm-stat .ds-label{font-size:.72rem;color:#64748b;font-weight:700;text-transform:uppercase;margin-bottom:2px;}
+.udm-stat .ds-val{font-size:1rem;font-weight:800;color:#1e293b;}
+.udm-section h4{font-size:.9rem;font-weight:700;color:#1e293b;margin:16px 0 8px;display:flex;align-items:center;gap:6px;}
+.pro-con-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.pro-list,.con-list{border-radius:10px;padding:12px;}
+.pro-list{background:#f0fdf4;}.con-list{background:#fff1f2;}
+.pro-list li,.con-list li{font-size:.82rem;margin-bottom:4px;}
+.pro-list li::before{content:"✓ ";color:#16a34a;font-weight:700;}
+.con-list li::before{content:"✗ ";color:#dc2626;font-weight:700;}
+.alumni-chip{display:inline-block;background:#f0f0ff;color:#4f46e5;padding:3px 10px;border-radius:10px;font-size:.78rem;margin:2px;}
+.close-modal{float:right;background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1rem;line-height:1;}
+
+/* Sync panel */
+.sync-panel{background:#fff;border-radius:14px;box-shadow:0 3px 16px rgba(0,0,0,.07);padding:20px;margin-bottom:20px;}
+.sync-panel h4{font-size:.95rem;font-weight:700;color:#1e293b;margin:0 0 12px;}
+.sync-row{display:flex;gap:10px;}
+.sync-input{flex:1;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.88rem;font-family:inherit;}
+.sync-input:focus{outline:none;border-color:#4f46e5;}
+.sync-go-btn{padding:10px 18px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;}
+
+/* Bookmarks tab */
+.tabs{display:flex;gap:8px;margin-bottom:20px;}
+.tab-btn{padding:8px 18px;border-radius:8px;border:1.5px solid #e2e8f0;background:#fff;font-weight:600;font-size:.85rem;cursor:pointer;transition:.2s;}
+.tab-btn.active{background:#1d4ed8;color:#fff;border-color:#1d4ed8;}
+
+/* Loading */
+.ud-loading{display:none;text-align:center;padding:40px;}
+.ud-loading.visible{display:block;}
+.spin-ring{width:40px;height:40px;border:3px solid #e2e8f0;border-top:3px solid #1d4ed8;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+{% endblock %}
+{% block content %}
+<div class="ud-hero">
+  <div class="ud-badge"><i class="fas fa-sync-alt"></i> Live University Intelligence</div>
+  <h1><i class="fas fa-database"></i> University Data Sync</h1>
+  <p>Browse 30+ universities with real rankings, fees, placements & fit scores. AI-sync any university instantly.</p>
+</div>
+
+<div class="ud-main">
+  <!-- Search & Filters -->
+  <div class="search-bar-row">
+    <input type="text" class="search-input" id="searchQ" placeholder="Search universities (e.g. CMU, Georgia Tech, Toronto)..." onkeydown="if(event.key==='Enter')searchUnis()">
+    <select class="filter-select" id="filterCountry">
+      <option value="">All Countries</option><option>USA</option><option>Canada</option><option>UK</option><option>Germany</option><option>Singapore</option><option>Australia</option>
+    </select>
+    <select class="filter-select" id="filterField">
+      <option value="">All Programs</option><option>CS</option><option>Data Science</option><option>AI</option><option>MBA</option><option>EE</option><option>Finance</option><option>Robotics</option>
+    </select>
+    <select class="filter-select" id="filterBudget">
+      <option value="999999">Any Budget</option><option value="10000">Under $10K/yr</option><option value="30000">Under $30K/yr</option><option value="50000">Under $50K/yr</option>
+    </select>
+    <button class="search-btn" onclick="searchUnis()"><i class="fas fa-search"></i> Search</button>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('search',this)"><i class="fas fa-search"></i> Search Results</button>
+    <button class="tab-btn" onclick="switchTab('bookmarks',this)"><i class="fas fa-bookmark"></i> Bookmarks</button>
+    <button class="tab-btn" onclick="switchTab('sync',this)"><i class="fas fa-magic"></i> AI Sync Any University</button>
+  </div>
+
+  <!-- Search Results -->
+  <div id="tabSearch">
+    <div class="result-meta">
+      <span>Showing <strong id="resultCount">0</strong> universities</span>
+      <div class="view-toggle">
+        <button class="vt-btn active" onclick="setView('grid',this)"><i class="fas fa-th-large"></i></button>
+        <button class="vt-btn" onclick="setView('list',this)"><i class="fas fa-list"></i></button>
+      </div>
+    </div>
+    <div class="ud-loading" id="udLoading"><div class="spin-ring"></div><p style="color:#64748b;">Loading universities…</p></div>
+    <div class="uni-grid" id="uniGrid"></div>
+  </div>
+
+  <!-- Bookmarks -->
+  <div id="tabBookmarks" style="display:none;">
+    <h3 style="font-size:1rem;font-weight:700;color:#1e293b;margin-bottom:16px;"><i class="fas fa-bookmark" style="color:#d97706;"></i> Your Bookmarked Universities</h3>
+    <div class="uni-grid" id="bookmarkGrid"></div>
+  </div>
+
+  <!-- AI Sync -->
+  <div id="tabSync" style="display:none;">
+    <div class="sync-panel">
+      <h4><i class="fas fa-magic" style="color:#7c3aed;"></i> AI Sync Any University</h4>
+      <p style="font-size:.85rem;color:#64748b;margin-bottom:14px;">Don't see a university in our database? Enter any university name and AI will generate detailed data instantly.</p>
+      <div class="sync-row">
+        <input type="text" class="sync-input" id="syncInput" placeholder="e.g. Northeastern University, University of Sydney, TU Berlin...">
+        <button class="sync-go-btn" onclick="syncUniversity()"><i class="fas fa-bolt"></i> Sync Data</button>
+      </div>
+    </div>
+    <div id="syncResult"></div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="ud-modal" id="uniModal">
+  <div class="ud-modal-box">
+    <div class="udm-header">
+      <button class="close-modal" onclick="closeModal()">✕</button>
+      <h2 id="modalTitle"></h2>
+      <div style="font-size:.85rem;opacity:.85;" id="modalSubtitle"></div>
+    </div>
+    <div class="udm-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+let allResults = [];
+searchUnis();
+
+function switchTab(tab, btn){
+  document.querySelectorAll('.tab-btn').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tabSearch').style.display = tab==='search'?'block':'none';
+  document.getElementById('tabBookmarks').style.display = tab==='bookmarks'?'block':'none';
+  document.getElementById('tabSync').style.display = tab==='sync'?'block':'none';
+  if(tab==='bookmarks') loadBookmarks();
+}
+
+function setView(v, btn){
+  document.querySelectorAll('.vt-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const grid = document.getElementById('uniGrid');
+  grid.style.gridTemplateColumns = v==='list' ? '1fr' : 'repeat(auto-fill,minmax(300px,1fr))';
+}
+
+async function searchUnis(){
+  const q = document.getElementById('searchQ').value;
+  const country = document.getElementById('filterCountry').value;
+  const field = document.getElementById('filterField').value;
+  const budget = document.getElementById('filterBudget').value;
+  document.getElementById('udLoading').classList.add('visible');
+  document.getElementById('uniGrid').innerHTML = '';
+  const params = new URLSearchParams({q,country,field,max_tuition:budget});
+  const res = await fetch('/api/universities/search?'+params);
+  const json = await res.json();
+  allResults = json.results;
+  document.getElementById('resultCount').textContent = json.total;
+  document.getElementById('uniGrid').innerHTML = allResults.map(renderCard).join('');
+  document.getElementById('udLoading').classList.remove('visible');
+}
+
+function renderCard(u){
+  const flag = {USA:'🇺🇸',Canada:'🇨🇦',UK:'🇬🇧',Germany:'🇩🇪',Singapore:'🇸🇬',Australia:'🇦🇺'}[u.country]||'🌍';
+  return `<div class="uni-card" onclick="showDetail(${u.id})">
+    <div class="uc-top">
+      <div>
+        <h3>${u.name}</h3>
+        <div class="uc-country">${flag} ${u.country} · ${u.city}</div>
+      </div>
+      <span class="qs-badge">QS #${u.qs_rank}</span>
+    </div>
+    <div class="uc-body">
+      <div class="uc-stat-row"><span class="sl">Acceptance Rate</span><span class="sv">${u.acceptance_rate}%</span></div>
+      <div class="uc-stat-row"><span class="sl">Annual Tuition</span><span class="sv">$${(u.tuition_usd||0).toLocaleString()}</span></div>
+      <div class="uc-stat-row"><span class="sl">Median Salary</span><span class="sv">$${((u.median_salary_usd||0)/1000).toFixed(0)}K</span></div>
+      <div class="uc-stat-row"><span class="sl">Avg GRE | GPA</span><span class="sv">${u.avg_gre||'N/A'} | ${u.avg_gpa||'N/A'}</span></div>
+      <div class="uc-tags">${(u.programs||[]).slice(0,3).map(p=>`<span class="uc-tag">${p}</span>`).join('')}</div>
+    </div>
+    <div class="uc-actions">
+      <button class="uc-btn detail" onclick="event.stopPropagation();showDetail(${u.id})"><i class="fas fa-info-circle"></i> Details</button>
+      <button class="uc-btn bookmark ${u.bookmarked?'active':''}" id="bm-${u.id}" onclick="event.stopPropagation();toggleBookmark(${u.id})">
+        <i class="fas fa-bookmark"></i> ${u.bookmarked?'Saved':'Save'}
+      </button>
+    </div>
+  </div>`;
+}
+
+async function showDetail(id){
+  const res = await fetch('/api/universities/'+id);
+  const json = await res.json();
+  const u = json.data;
+  const flag = {USA:'🇺🇸',Canada:'🇨🇦',UK:'🇬🇧',Germany:'🇩🇪',Singapore:'🇸🇬',Australia:'🇦🇺'}[u.country]||'🌍';
+  document.getElementById('modalTitle').textContent = u.name;
+  document.getElementById('modalSubtitle').innerHTML = `${flag} ${u.city}, ${u.country} · Founded ${u.founded||'N/A'} · ${u.type||'University'}`;
+  document.getElementById('modalBody').innerHTML = `
+    <div class="udm-grid">
+      <div class="udm-stat"><div class="ds-label">QS Rank</div><div class="ds-val">#${u.qs_rank}</div></div>
+      <div class="udm-stat"><div class="ds-label">Acceptance Rate</div><div class="ds-val">${u.acceptance_rate}%</div></div>
+      <div class="udm-stat"><div class="ds-label">Annual Tuition</div><div class="ds-val">$${(u.tuition_usd||0).toLocaleString()}</div></div>
+      <div class="udm-stat"><div class="ds-label">Living Cost/yr</div><div class="ds-val">$${(u.living_usd||0).toLocaleString()}</div></div>
+      <div class="udm-stat"><div class="ds-label">Avg GRE</div><div class="ds-val">${u.avg_gre||'N/A'}</div></div>
+      <div class="udm-stat"><div class="ds-label">Median Salary</div><div class="ds-val">$${((u.median_salary_usd||0)/1000).toFixed(0)}K</div></div>
+      <div class="udm-stat"><div class="ds-label">Placement Rate</div><div class="ds-val">${u.placement_rate||'N/A'}%</div></div>
+      <div class="udm-stat"><div class="ds-label">Duration</div><div class="ds-val">${u.duration||'2 years'}</div></div>
+    </div>
+    <div class="udm-section"><h4><i class="fas fa-book" style="color:#4f46e5;"></i> Programs Offered</h4>
+      <div>${(u.programs||[]).map(p=>`<span class="alumni-chip">${p}</span>`).join('')}</div>
+    </div>
+    <div class="udm-section"><h4><i class="fas fa-flask" style="color:#7c3aed;"></i> Research Areas</h4>
+      <div>${(u.research_areas||[]).map(r=>`<span class="alumni-chip" style="background:#faf5ff;color:#7c3aed;">${r}</span>`).join('')}</div>
+    </div>
+    <div class="pro-con-grid">
+      <div class="pro-list"><strong style="font-size:.82rem;color:#16a34a;">Pros</strong><ul style="padding-left:0;list-style:none;margin-top:6px;">${(u.pros||[]).map(p=>`<li>${p}</li>`).join('')}</ul></div>
+      <div class="con-list"><strong style="font-size:.82rem;color:#dc2626;">Cons</strong><ul style="padding-left:0;list-style:none;margin-top:6px;">${(u.cons||[]).map(c=>`<li>${c}</li>`).join('')}</ul></div>
+    </div>
+    ${(u.notable_alumni||[]).length?`<div class="udm-section"><h4><i class="fas fa-star" style="color:#d97706;"></i> Notable Alumni</h4>${u.notable_alumni.map(a=>`<span class="alumni-chip">${a}</span>`).join('')}</div>`:''}
+    <div style="margin-top:16px;display:flex;gap:10px;">
+      <button onclick="toggleBookmark(${u.id})" style="padding:10px 20px;background:#1d4ed8;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;"><i class="fas fa-bookmark"></i> ${u.bookmarked?'Remove Bookmark':'Bookmark'}</button>
+      <button onclick="closeModal()" style="padding:10px 20px;background:#f1f5f9;color:#374151;border:none;border-radius:8px;font-weight:600;cursor:pointer;">Close</button>
+    </div>`;
+  document.getElementById('uniModal').classList.add('open');
+}
+function closeModal(){ document.getElementById('uniModal').classList.remove('open'); }
+
+async function toggleBookmark(id){
+  const res = await fetch('/api/universities/bookmark', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uni_id:id})});
+  const json = await res.json();
+  const btn = document.getElementById('bm-'+id);
+  if(btn){
+    btn.classList.toggle('active', json.action==='added');
+    btn.innerHTML = `<i class="fas fa-bookmark"></i> ${json.action==='added'?'Saved':'Save'}`;
+  }
+}
+
+async function loadBookmarks(){
+  const res = await fetch('/api/universities/bookmarks');
+  const json = await res.json();
+  document.getElementById('bookmarkGrid').innerHTML = json.bookmarks.length ? json.bookmarks.map(renderCard).join('') : '<p style="color:#64748b;">No bookmarks yet. Click "Save" on any university card to bookmark it.</p>';
+}
+
+async function syncUniversity(){
+  const name = document.getElementById('syncInput').value.trim();
+  if(!name){alert('Please enter a university name');return;}
+  const btn = document.querySelector('.sync-go-btn');
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing…'; btn.disabled=true;
+  document.getElementById('syncResult').innerHTML = '';
+  const res = await fetch('/api/universities/sync',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
+  const json = await res.json();
+  btn.innerHTML = '<i class="fas fa-bolt"></i> Sync Data'; btn.disabled=false;
+  if(!json.success){document.getElementById('syncResult').innerHTML=`<p style="color:#dc2626;">${json.error}</p>`;return;}
+  const u = json.data;
+  document.getElementById('syncResult').innerHTML = `
+    <div style="background:#fff;border-radius:14px;box-shadow:0 3px 16px rgba(0,0,0,.07);padding:24px;margin-top:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+        <div><h3 style="font-size:1.1rem;font-weight:800;color:#1e293b;margin:0 0 4px;">${u.name||name}</h3><div style="font-size:.82rem;color:#64748b;">${u.city||''}, ${u.country||''}</div></div>
+        <span style="background:#4f46e5;color:#fff;font-size:.72rem;font-weight:700;padding:3px 8px;border-radius:6px;"><i class="fas fa-magic"></i> AI Generated</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:16px;">
+        ${[['QS Rank','#'+(u.qs_rank||'N/A')],['Accept Rate',(u.acceptance_rate||'N/A')+'%'],['Tuition/yr','$'+(u.tuition_usd||0).toLocaleString()],['Median Salary','$'+((u.median_salary_usd||0)/1000).toFixed(0)+'K'],['GRE Avg',u.avg_gre||'N/A'],['Duration',u.duration||'2 years']].map(([l,v])=>`<div style="background:#f8fafc;border-radius:8px;padding:10px;"><div style="font-size:.7rem;color:#64748b;font-weight:700;">${l}</div><div style="font-size:1rem;font-weight:800;color:#1e293b;">${v}</div></div>`).join('')}
+      </div>
+      <div><strong style="font-size:.85rem;">Programs: </strong>${(u.programs||[]).map(p=>`<span style="background:#f0f0ff;color:#4f46e5;padding:2px 8px;border-radius:6px;font-size:.75rem;margin:2px;display:inline-block;">${p}</span>`).join('')}</div>
+      <div style="margin-top:10px;"><strong style="font-size:.85rem;">Pros: </strong>${(u.pros||[]).map(p=>`<span style="color:#16a34a;font-size:.82rem;margin-right:8px;">✓ ${p}</span>`).join('')}</div>
+    </div>`;
+}
+</script>
+{% endblock %}

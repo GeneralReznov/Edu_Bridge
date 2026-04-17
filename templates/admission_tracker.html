@@ -1,0 +1,343 @@
+{% extends "base.html" %}
+{% block title %}Admission Tracker – EduBridge AI{% endblock %}
+{% block head %}
+<style>
+.at-hero{background:linear-gradient(135deg,#052e16,#166534,#16a34a);color:#fff;padding:48px 0 32px;text-align:center;}
+.at-hero h1{font-size:2rem;font-weight:800;margin-bottom:6px;}
+.at-badge{display:inline-block;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:4px 14px;font-size:.8rem;font-weight:600;margin-bottom:14px;}
+.at-main{max-width:1300px;margin:0 auto;padding:24px 16px;}
+
+.at-stats{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:24px;}
+.stat-card{background:#fff;border-radius:14px;box-shadow:0 3px 16px rgba(0,0,0,.07);padding:16px;text-align:center;}
+.stat-card .sv{font-size:1.8rem;font-weight:800;margin-bottom:4px;}
+.stat-card .sl{font-size:.72rem;color:#64748b;font-weight:600;text-transform:uppercase;}
+
+.at-toolbar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center;}
+.at-toolbar select,.at-toolbar input{padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:.85rem;font-family:inherit;}
+.at-toolbar select:focus,.at-toolbar input:focus{outline:none;border-color:#16a34a;}
+.add-btn{padding:10px 20px;background:linear-gradient(135deg,#16a34a,#4ade80);color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:.88rem;white-space:nowrap;margin-left:auto;}
+.add-btn:hover{transform:translateY(-1px);}
+
+.at-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;}
+.app-card{background:#fff;border-radius:16px;box-shadow:0 3px 16px rgba(0,0,0,.07);overflow:hidden;transition:.2s;}
+.app-card:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,0,0,.12);}
+.app-card-header{padding:16px 18px 12px;border-bottom:1px solid #f1f5f9;}
+.ach-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.ac-uni{font-size:1rem;font-weight:800;color:#1e293b;}
+.ac-program{font-size:.8rem;color:#64748b;margin-top:2px;}
+.status-badge{padding:4px 10px;border-radius:12px;font-size:.72rem;font-weight:700;white-space:nowrap;}
+.tier-pill{display:inline-block;padding:2px 8px;border-radius:8px;font-size:.7rem;font-weight:700;margin-top:4px;}
+.tier-Reach{background:#fee2e2;color:#dc2626;}
+.tier-Target{background:#dbeafe;color:#1d4ed8;}
+.tier-Safe{background:#d1fae5;color:#16a34a;}
+
+.app-card-body{padding:14px 18px;}
+.ab-row{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
+.ab-info{display:flex;align-items:center;gap:5px;font-size:.78rem;color:#64748b;}
+.ab-info i{color:#94a3b8;width:14px;}
+
+.deadline-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:10px;font-size:.75rem;font-weight:700;}
+.dl-overdue{background:#fee2e2;color:#dc2626;}
+.dl-urgent{background:#fef3c7;color:#d97706;}
+.dl-upcoming{background:#dbeafe;color:#1d4ed8;}
+.dl-future{background:#f1f5f9;color:#64748b;}
+.dl-none{display:none;}
+
+.task-list{margin-bottom:12px;}
+.task-item{display:flex;align-items:center;gap:8px;font-size:.8rem;color:#475569;padding:4px 0;}
+.task-check{width:16px;height:16px;border-radius:4px;border:2px solid #cbd5e1;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:.2s;}
+.task-check.done{background:#16a34a;border-color:#16a34a;color:#fff;}
+.task-text{flex:1;}
+.task-text.done{text-decoration:line-through;color:#94a3b8;}
+.task-progress{height:5px;background:#f1f5f9;border-radius:10px;overflow:hidden;margin-bottom:10px;}
+.tp-fill{height:100%;background:linear-gradient(90deg,#16a34a,#4ade80);border-radius:10px;transition:width .4s;}
+
+.app-card-footer{padding:10px 18px;border-top:1px solid #f1f5f9;display:flex;gap:8px;}
+.ac-btn{padding:6px 12px;border-radius:8px;font-size:.75rem;font-weight:700;cursor:pointer;border:1.5px solid #e2e8f0;background:#fff;transition:.2s;}
+.ac-btn:hover{border-color:#16a34a;color:#16a34a;}
+.ac-btn.danger:hover{border-color:#dc2626;color:#dc2626;}
+
+.empty-state{text-align:center;padding:60px 20px;color:#94a3b8;}
+.empty-state .ei{font-size:3rem;margin-bottom:12px;}
+.empty-state h3{font-size:1.1rem;font-weight:700;color:#475569;margin:0 0 8px;}
+.empty-state p{font-size:.85rem;}
+
+.upcoming-bar{background:#fff;border-radius:14px;box-shadow:0 3px 16px rgba(0,0,0,.07);padding:16px 20px;margin-bottom:20px;}
+.ub-title{font-size:.85rem;font-weight:700;color:#1e293b;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.ub-items{display:flex;gap:10px;flex-wrap:wrap;}
+.ub-item{background:#fef3c7;border:1.5px solid #fde68a;border-radius:10px;padding:8px 14px;font-size:.78rem;}
+.ub-item strong{display:block;color:#92400e;font-weight:700;}
+.ub-item span{color:#b45309;}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:#fff;border-radius:20px;padding:32px;width:100%;max-width:560px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.modal-box h2{font-size:1.2rem;font-weight:800;color:#1e293b;margin:0 0 20px;}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.fl{font-size:.78rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin:10px 0 5px;}
+input.mi,select.mi,textarea.mi{width:100%;box-sizing:border-box;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.88rem;font-family:inherit;}
+input.mi:focus,select.mi:focus,textarea.mi:focus{outline:none;border-color:#16a34a;}
+.modal-footer{display:flex;gap:10px;margin-top:20px;justify-content:flex-end;}
+.m-save-btn{padding:10px 28px;background:linear-gradient(135deg,#16a34a,#4ade80);color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;}
+.m-cancel-btn{padding:10px 20px;background:#f1f5f9;color:#475569;border:none;border-radius:10px;font-weight:700;cursor:pointer;}
+
+@media(max-width:900px){.at-stats{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:600px){.at-stats{grid-template-columns:repeat(2,1fr);}.mg{grid-template-columns:1fr;}}
+</style>
+{% endblock %}
+{% block content %}
+<div class="at-hero">
+  <div class="at-badge">📋 Admission Tracker</div>
+  <h1>Manage Your Applications</h1>
+  <p style="opacity:.85;margin:0;font-size:.95rem;">Track deadlines, status updates, and tasks for every university</p>
+</div>
+
+<div class="at-main">
+  <!-- Stats Row -->
+  <div class="at-stats" id="statsRow">
+    <div class="stat-card"><div class="sv" id="s-total" style="color:#1e293b;">0</div><div class="sl">Total</div></div>
+    <div class="stat-card"><div class="sv" id="s-admitted" style="color:#16a34a;">0</div><div class="sl">Admitted</div></div>
+    <div class="stat-card"><div class="sv" id="s-pending" style="color:#1d4ed8;">0</div><div class="sl">Pending</div></div>
+    <div class="stat-card"><div class="sv" id="s-interviews" style="color:#7c3aed;">0</div><div class="sl">Interviews</div></div>
+    <div class="stat-card"><div class="sv" id="s-waitlisted" style="color:#f59e0b;">0</div><div class="sl">Waitlisted</div></div>
+    <div class="stat-card"><div class="sv" id="s-rejected" style="color:#dc2626;">0</div><div class="sl">Rejected</div></div>
+  </div>
+
+  <!-- Upcoming Deadlines -->
+  <div class="upcoming-bar" id="upcomingBar" style="display:none;">
+    <div class="ub-title"><i class="fas fa-bell" style="color:#d97706;"></i> Upcoming Deadlines</div>
+    <div class="ub-items" id="upcomingItems"></div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="at-toolbar">
+    <select id="filterStatus" onchange="loadApps()">
+      <option value="">All Status</option>
+      <option>Planning</option><option>Applied</option><option>Documents Submitted</option>
+      <option>Under Review</option><option>Interview Scheduled</option><option>Interview Done</option>
+      <option>Waitlisted</option><option>Admitted</option><option>Rejected</option>
+    </select>
+    <select id="filterTier" onchange="loadApps()">
+      <option value="">All Tiers</option>
+      <option>Reach</option><option>Target</option><option>Safe</option>
+    </select>
+    <input type="text" id="searchInput" placeholder="🔍 Search university..." oninput="loadApps()" style="min-width:180px;">
+    <button class="add-btn" onclick="openModal()"><i class="fas fa-plus"></i> Add University</button>
+  </div>
+
+  <!-- App Cards Grid -->
+  <div class="at-grid" id="appGrid">
+    <div class="empty-state" style="grid-column:1/-1;">
+      <div class="ei">📋</div>
+      <h3>No Applications Yet</h3>
+      <p>Click <strong>Add University</strong> to start tracking your applications.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <h2 id="modalTitle"><i class="fas fa-plus-circle" style="color:#16a34a;"></i> Add University</h2>
+    <input type="hidden" id="editId">
+    <div class="mg">
+      <div><div class="fl">University Name *</div><input class="mi" id="f-uni" placeholder="e.g. Georgia Tech" required></div>
+      <div><div class="fl">Program *</div><input class="mi" id="f-prog" placeholder="e.g. MS Computer Science"></div>
+      <div><div class="fl">Country</div><select class="mi" id="f-country"><option>USA</option><option>Canada</option><option>UK</option><option>Germany</option><option>Australia</option><option>Singapore</option><option>Other</option></select></div>
+      <div><div class="fl">Degree</div><select class="mi" id="f-degree"><option>MS</option><option>MBA</option><option>PhD</option><option>MEng</option><option>MFin</option><option>Other</option></select></div>
+      <div><div class="fl">Intake</div><select class="mi" id="f-intake"><option>Fall 2025</option><option>Spring 2026</option><option>Fall 2026</option><option>Spring 2027</option></select></div>
+      <div><div class="fl">Tier</div><select class="mi" id="f-tier"><option>Reach</option><option selected>Target</option><option>Safe</option></select></div>
+      <div><div class="fl">Application Deadline</div><input type="date" class="mi" id="f-deadline"></div>
+      <div><div class="fl">Tuition (USD/yr)</div><input type="number" class="mi" id="f-tuition" placeholder="50000"></div>
+    </div>
+    <div class="fl">Status</div>
+    <select class="mi" id="f-status" style="width:100%;">
+      <option>Planning</option><option>Applied</option><option>Documents Submitted</option>
+      <option>Under Review</option><option>Interview Scheduled</option><option>Interview Done</option>
+      <option>Waitlisted</option><option>Admitted</option><option>Rejected</option>
+    </select>
+    <div class="fl">Priority</div>
+    <select class="mi" id="f-priority" style="width:100%;"><option>High</option><option selected>Medium</option><option>Low</option></select>
+    <div class="fl">Application Portal Link</div>
+    <input type="url" class="mi" id="f-portal" placeholder="https://apply.gatech.edu" style="width:100%;box-sizing:border-box;">
+    <div class="fl">Notes</div>
+    <textarea class="mi" id="f-notes" rows="2" placeholder="Scholarship details, contacts, special requirements..." style="width:100%;box-sizing:border-box;"></textarea>
+    <div class="modal-footer">
+      <button class="m-cancel-btn" onclick="closeModal()">Cancel</button>
+      <button class="m-save-btn" onclick="saveApp()">Save Application</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+let allApps = [];
+let editingId = null;
+let allStatuses = [];
+
+async function loadApps() {
+  const res = await fetch('/api/tracker/list');
+  const data = await res.json();
+  if (!data.success) return;
+  allApps = data.applications || [];
+  updateStats(data.stats);
+  renderUpcoming(data.upcoming_deadlines);
+  renderApps();
+}
+
+function updateStats(s) {
+  document.getElementById('s-total').textContent = s.total;
+  document.getElementById('s-admitted').textContent = s.admitted;
+  document.getElementById('s-pending').textContent = s.pending;
+  document.getElementById('s-interviews').textContent = s.interviews;
+  document.getElementById('s-waitlisted').textContent = s.waitlisted;
+  document.getElementById('s-rejected').textContent = s.rejected;
+}
+
+function renderUpcoming(items) {
+  const bar = document.getElementById('upcomingBar');
+  if (!items || !items.length) { bar.style.display='none'; return; }
+  bar.style.display = 'block';
+  document.getElementById('upcomingItems').innerHTML = items.map(a => `
+    <div class="ub-item">
+      <strong>${a.university}</strong>
+      <span>${a.deadline} — ${a.deadline_status === 'urgent' ? '⚠️ Urgent' : '📅 Upcoming'}</span>
+    </div>`).join('');
+}
+
+function renderApps() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const status = document.getElementById('filterStatus').value;
+  const tier = document.getElementById('filterTier').value;
+  let apps = allApps.filter(a => {
+    if (q && !a.university.toLowerCase().includes(q) && !a.program.toLowerCase().includes(q)) return false;
+    if (status && a.status !== status) return false;
+    if (tier && a.tier !== tier) return false;
+    return true;
+  });
+  const grid = document.getElementById('appGrid');
+  if (!apps.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="ei">📋</div><h3>No Applications Yet</h3><p>Click <strong>Add University</strong> to start tracking.</p></div>`;
+    return;
+  }
+  grid.innerHTML = apps.map(a => renderCard(a)).join('');
+}
+
+function dlClass(ds) {
+  const map = {overdue:'dl-overdue',urgent:'dl-urgent',upcoming:'dl-upcoming',future:'dl-future',none:'dl-none'};
+  return map[ds] || 'dl-future';
+}
+function dlIcon(ds) {
+  if(ds==='overdue') return '⛔ Overdue';
+  if(ds==='urgent') return '⚠️ Due Soon';
+  if(ds==='upcoming') return '📅 Upcoming';
+  return '🗓 ' + '';
+}
+
+function renderCard(a) {
+  const doneCount = (a.tasks||[]).filter(t=>t.done).length;
+  const total = (a.tasks||[]).length;
+  const pct = total ? Math.round(doneCount/total*100) : 0;
+  const color = a.status_color || '#64748b';
+  return `<div class="app-card" id="card-${a.id}">
+    <div class="app-card-header">
+      <div class="ach-top">
+        <div>
+          <div class="ac-uni">${a.university}</div>
+          <div class="ac-program">${a.program} • ${a.country}</div>
+          <span class="tier-pill tier-${a.tier}">${a.tier}</span>
+        </div>
+        <span class="status-badge" style="background:${color}22;color:${color};">${a.status}</span>
+      </div>
+      ${a.deadline ? `<div class="deadline-chip ${dlClass(a.deadline_status)}">${dlIcon(a.deadline_status)} ${a.deadline}</div>` : ''}
+    </div>
+    <div class="app-card-body">
+      <div class="ab-row">
+        <span class="ab-info"><i class="fas fa-graduation-cap"></i>${a.degree} • ${a.intake}</span>
+        ${a.tuition_usd ? `<span class="ab-info"><i class="fas fa-dollar-sign"></i>$${Number(a.tuition_usd).toLocaleString()}/yr</span>` : ''}
+        <span class="ab-info"><i class="fas fa-flag"></i>${a.priority}</span>
+      </div>
+      <div style="font-size:.75rem;color:#64748b;margin-bottom:6px;font-weight:600;">Tasks: ${doneCount}/${total} complete</div>
+      <div class="task-progress"><div class="tp-fill" style="width:${pct}%"></div></div>
+      <div class="task-list">
+        ${(a.tasks||[]).map((t,i) => `
+          <div class="task-item">
+            <div class="task-check ${t.done?'done':''}" onclick="toggleTask(${a.id},${i})">
+              ${t.done?'<i class="fas fa-check" style="font-size:.6rem;"></i>':''}
+            </div>
+            <span class="task-text ${t.done?'done':''}">${t.task}</span>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="app-card-footer">
+      <button class="ac-btn" onclick="editApp(${a.id})"><i class="fas fa-edit"></i> Edit</button>
+      ${a.portal_link ? `<a href="${a.portal_link}" target="_blank" class="ac-btn" style="text-decoration:none;"><i class="fas fa-external-link-alt"></i> Portal</a>` : ''}
+      <button class="ac-btn danger" onclick="deleteApp(${a.id})" style="margin-left:auto;"><i class="fas fa-trash"></i></button>
+    </div>
+  </div>`;
+}
+
+async function toggleTask(appId, taskIdx) {
+  const app = allApps.find(a => a.id === appId);
+  if (!app) return;
+  app.tasks[taskIdx].done = !app.tasks[taskIdx].done;
+  await fetch('/api/tracker/update', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({id: appId, tasks: app.tasks})
+  });
+  renderApps();
+}
+
+function openModal(app) {
+  editingId = null;
+  document.getElementById('modalTitle').innerHTML = '<i class="fas fa-plus-circle" style="color:#16a34a;"></i> Add University';
+  ['uni','prog','country','degree','intake','tier','deadline','tuition','status','priority','portal','notes'].forEach(k => {
+    const el = document.getElementById('f-'+k);
+    if(el) el.value = app ? (app[{uni:'university',prog:'program',deadline:'deadline',tuition:'tuition_usd',portal:'portal_link'}[k]||k]||'') : (el.tagName==='SELECT'?el.options[k==='tier'?1:0].value:'');
+  });
+  if(app) { editingId=app.id; document.getElementById('modalTitle').innerHTML='<i class="fas fa-edit" style="color:#1d4ed8;"></i> Edit Application'; }
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+
+function editApp(id) { openModal(allApps.find(a=>a.id===id)); }
+
+async function saveApp() {
+  const payload = {
+    university: document.getElementById('f-uni').value.trim(),
+    program: document.getElementById('f-prog').value.trim(),
+    country: document.getElementById('f-country').value,
+    degree: document.getElementById('f-degree').value,
+    intake: document.getElementById('f-intake').value,
+    tier: document.getElementById('f-tier').value,
+    deadline: document.getElementById('f-deadline').value,
+    tuition_usd: document.getElementById('f-tuition').value,
+    status: document.getElementById('f-status').value,
+    priority: document.getElementById('f-priority').value,
+    portal_link: document.getElementById('f-portal').value,
+    notes: document.getElementById('f-notes').value,
+  };
+  if(!payload.university){alert('University name is required.');return;}
+  if(editingId) {
+    payload.id = editingId;
+    await fetch('/api/tracker/update',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  } else {
+    const res = await fetch('/api/tracker/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const d = await res.json();
+    if(d.xp_gained && window.awardXP) awardXP(d.xp_gained);
+  }
+  closeModal();
+  loadApps();
+}
+
+async function deleteApp(id) {
+  if(!confirm('Remove this application?')) return;
+  await fetch('/api/tracker/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
+  loadApps();
+}
+
+loadApps();
+</script>
+{% endblock %}

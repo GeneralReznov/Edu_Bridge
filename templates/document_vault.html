@@ -1,0 +1,278 @@
+{% extends "base.html" %}
+{% block title %}Document Vault – EduBridge AI{% endblock %}
+{% block head %}
+<style>
+.dv-hero{background:linear-gradient(135deg,#1c1917,#44403c,#78716c);color:#fff;padding:48px 0 32px;text-align:center;}
+.dv-hero h1{font-size:2rem;font-weight:800;margin-bottom:6px;}
+.dv-badge{display:inline-block;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:4px 14px;font-size:.8rem;font-weight:600;margin-bottom:14px;}
+.dv-main{max-width:1200px;margin:0 auto;padding:28px 16px;}
+.dv-layout{display:grid;grid-template-columns:280px 1fr;gap:20px;height:calc(100vh - 220px);min-height:500px;}
+
+/* Sidebar */
+.dv-sidebar{background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.08);overflow:hidden;display:flex;flex-direction:column;}
+.dv-sb-header{padding:16px 18px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;}
+.dv-sb-header h4{font-size:.9rem;font-weight:700;color:#1e293b;margin:0;}
+.new-doc-btn{background:#4f46e5;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:.78rem;font-weight:700;cursor:pointer;}
+.doc-type-filter{padding:10px 18px;border-bottom:1px solid #f1f5f9;}
+.dtf-label{font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:6px;}
+.type-chip{display:inline-block;padding:3px 10px;border-radius:10px;font-size:.75rem;font-weight:600;cursor:pointer;margin:2px;border:1.5px solid transparent;transition:.2s;}
+.type-chip.active,.type-chip:hover{border-color:currentColor;}
+.doc-list{flex:1;overflow-y:auto;padding:8px;}
+.doc-item{padding:10px 12px;border-radius:8px;cursor:pointer;margin-bottom:4px;border:1.5px solid transparent;transition:.2s;}
+.doc-item:hover{background:#f8fafc;}
+.doc-item.active{background:#f0f0ff;border-color:#c7d2fe;}
+.di-title{font-size:.85rem;font-weight:700;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.di-meta{font-size:.72rem;color:#94a3b8;margin-top:2px;}
+.di-type-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;}
+.empty-state{text-align:center;padding:30px 16px;color:#94a3b8;font-size:.82rem;}
+
+/* Editor */
+.dv-editor{background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.08);display:flex;flex-direction:column;overflow:hidden;}
+.editor-toolbar{padding:12px 16px;border-bottom:1px solid #f1f5f9;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.et-input{flex:1;min-width:160px;padding:7px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.88rem;font-family:inherit;font-weight:700;}
+.et-input:focus{outline:none;border-color:#4f46e5;}
+.et-select{padding:6px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.8rem;font-family:inherit;}
+.et-btn{padding:7px 12px;border:none;border-radius:8px;font-size:.78rem;font-weight:700;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:4px;}
+.et-btn.save{background:#16a34a;color:#fff;}
+.et-btn.ai{background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;}
+.et-btn.del{background:#fee2e2;color:#dc2626;}
+.editor-stats{padding:4px 16px;background:#f8fafc;border-bottom:1px solid #f1f5f9;font-size:.72rem;color:#64748b;display:flex;gap:16px;}
+.editor-body{flex:1;padding:0;position:relative;}
+.editor-textarea{width:100%;height:100%;min-height:400px;box-sizing:border-box;padding:20px;border:none;outline:none;resize:none;font-size:.9rem;font-family:'Inter',sans-serif;line-height:1.7;color:#1e293b;}
+.editor-placeholder{display:none;position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;flex-direction:column;gap:8px;color:#94a3b8;}
+
+/* Template picker modal */
+.tp-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9000;align-items:center;justify-content:center;}
+.tp-modal.open{display:flex;}
+.tp-box{background:#fff;border-radius:16px;padding:24px;max-width:640px;width:90%;max-height:80vh;overflow-y:auto;}
+.tp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:16px;}
+.tp-card{background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:14px;cursor:pointer;text-align:center;transition:.2s;}
+.tp-card:hover{border-color:#4f46e5;background:#f0f0ff;}
+.tp-icon{font-size:1.4rem;margin-bottom:6px;}
+.tp-name{font-size:.78rem;font-weight:700;color:#1e293b;}
+
+/* AI improve modal */
+.ai-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9000;align-items:center;justify-content:center;}
+.ai-modal.open{display:flex;}
+.ai-box{background:#fff;border-radius:16px;padding:24px;max-width:700px;width:90%;max-height:85vh;overflow-y:auto;}
+</style>
+{% endblock %}
+{% block content %}
+<div class="dv-hero">
+  <div class="dv-badge"><i class="fas fa-shield-alt"></i> Secure Document Storage</div>
+  <h1><i class="fas fa-folder-open"></i> Document Vault</h1>
+  <p>Create, edit, and organize all your application documents — SOP, LOR briefs, resume, essays & more</p>
+</div>
+
+<div class="dv-main">
+  <div class="dv-layout">
+    <!-- Sidebar -->
+    <div class="dv-sidebar">
+      <div class="dv-sb-header">
+        <h4><i class="fas fa-folder" style="color:#d97706;"></i> My Documents</h4>
+        <button class="new-doc-btn" onclick="openTemplates()"><i class="fas fa-plus"></i> New</button>
+      </div>
+      <div class="doc-type-filter">
+        <div class="dtf-label">Filter by Type</div>
+        <span class="type-chip active" style="color:#4f46e5;" onclick="filterDocs('',this)">All</span>
+        <span class="type-chip" style="color:#7c3aed;" onclick="filterDocs('sop',this)">SOP</span>
+        <span class="type-chip" style="color:#16a34a;" onclick="filterDocs('lor',this)">LOR</span>
+        <span class="type-chip" style="color:#dc2626;" onclick="filterDocs('resume',this)">Resume</span>
+        <span class="type-chip" style="color:#d97706;" onclick="filterDocs('essay',this)">Essay</span>
+        <span class="type-chip" style="color:#0891b2;" onclick="filterDocs('notes',this)">Notes</span>
+      </div>
+      <div class="doc-list" id="docList">
+        <div class="empty-state"><i class="fas fa-file-plus" style="font-size:2rem;margin-bottom:8px;display:block;"></i>No documents yet.<br>Click "+ New" to start.</div>
+      </div>
+    </div>
+
+    <!-- Editor -->
+    <div class="dv-editor" id="editorPanel">
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;color:#94a3b8;padding:40px;" id="editorEmpty">
+        <i class="fas fa-pen-fancy" style="font-size:2.5rem;margin-bottom:16px;"></i>
+        <h3 style="font-size:1rem;font-weight:700;color:#1e293b;margin:0 0 6px;">Select a document to edit</h3>
+        <p style="font-size:.85rem;margin:0 0 16px;">Or create a new document using the + New button</p>
+        <button onclick="openTemplates()" style="background:#4f46e5;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-weight:700;cursor:pointer;"><i class="fas fa-plus"></i> Create Document</button>
+      </div>
+      <div id="editorActive" style="display:none;flex-direction:column;flex:1;">
+        <div class="editor-toolbar">
+          <input type="text" class="et-input" id="docTitle" placeholder="Document title…" oninput="markDirty()">
+          <select class="et-select" id="docStatus">
+            <option value="draft">📝 Draft</option><option value="reviewing">🔍 Reviewing</option>
+            <option value="final">✅ Final</option>
+          </select>
+          <input type="text" class="et-select" id="docUniversity" placeholder="University (optional)" style="width:140px;" oninput="markDirty()">
+          <button class="et-btn save" onclick="saveDoc()"><i class="fas fa-save"></i> Save</button>
+          <button class="et-btn ai" onclick="openAI()"><i class="fas fa-magic"></i> AI Improve</button>
+          <button class="et-btn del" onclick="deleteDoc()"><i class="fas fa-trash"></i></button>
+        </div>
+        <div class="editor-stats"><span id="wordCount">0 words</span><span id="charCount">0 chars</span><span id="lastSaved">Unsaved</span></div>
+        <div class="editor-body">
+          <textarea class="editor-textarea" id="docContent" placeholder="Start writing your document here…" oninput="updateStats();markDirty()"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Template Picker -->
+<div class="tp-modal" id="tpModal">
+  <div class="tp-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+      <h3 style="font-size:1rem;font-weight:800;color:#1e293b;margin:0;">Choose Document Type</h3>
+      <button onclick="document.getElementById('tpModal').classList.remove('open')" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:#64748b;">✕</button>
+    </div>
+    <p style="font-size:.83rem;color:#64748b;margin:0 0 16px;">Start from a template or blank document</p>
+    <div class="tp-grid" id="templateGrid"></div>
+  </div>
+</div>
+
+<!-- AI Improve Modal -->
+<div class="ai-modal" id="aiModal">
+  <div class="ai-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h3 style="font-size:1rem;font-weight:800;color:#1e293b;margin:0;"><i class="fas fa-magic" style="color:#7c3aed;"></i> AI Document Improver</h3>
+      <button onclick="document.getElementById('aiModal').classList.remove('open')" style="background:none;border:none;font-size:1.2rem;cursor:pointer;">✕</button>
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:.82rem;font-weight:700;color:#374151;">Improvement Instruction:</label>
+      <input id="aiInstruction" type="text" value="Improve this for a graduate school application" style="width:100%;box-sizing:border-box;margin-top:6px;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.88rem;font-family:inherit;">
+    </div>
+    <button onclick="runAI()" style="background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-weight:700;cursor:pointer;width:100%;margin-bottom:16px;"><i class="fas fa-bolt"></i> Improve with AI</button>
+    <div id="aiResult" style="display:none;">
+      <div style="background:#f8fafc;border-radius:10px;padding:16px;margin-bottom:12px;font-size:.85rem;color:#374151;max-height:300px;overflow-y:auto;" id="aiImproved"></div>
+      <div style="background:#f0fdf4;border-radius:10px;padding:12px;font-size:.82rem;color:#374151;" id="aiFeedback"></div>
+      <button onclick="applyAI()" style="background:#16a34a;color:#fff;border:none;border-radius:8px;padding:10px 18px;font-weight:700;cursor:pointer;margin-top:12px;"><i class="fas fa-check"></i> Apply Improved Version</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentDocId = null, isDirty = false, allDocs = [], currentType = '', aiImprovedText = '';
+const TYPE_COLORS = {sop:'#7c3aed',lor:'#16a34a',resume:'#4f46e5',essay:'#d97706',financial:'#dc2626',notes:'#0891b2',visa:'#0f766e',other:'#64748b'};
+
+loadDocs();
+
+async function loadDocs(){
+  const res = await fetch('/api/documents/list'+(currentType?'?type='+currentType:''));
+  const json = await res.json();
+  allDocs = json.documents;
+  renderDocList();
+}
+
+function renderDocList(){
+  const list = document.getElementById('docList');
+  if(!allDocs.length){list.innerHTML='<div class="empty-state"><i class="fas fa-file-plus" style="font-size:2rem;display:block;margin-bottom:8px;"></i>No documents.<br>Click "+ New" to start.</div>';return;}
+  list.innerHTML = allDocs.map(d=>`
+    <div class="doc-item ${d.id===currentDocId?'active':''}" onclick="openDoc(${d.id})">
+      <div class="di-title">
+        <span class="di-type-dot" style="background:${TYPE_COLORS[d.type]||'#64748b'};"></span>
+        ${d.title}
+      </div>
+      <div class="di-meta">${d.word_count||0} words · ${d.updated_at}</div>
+    </div>`).join('');
+}
+
+function openDoc(id){
+  const doc = allDocs.find(d=>d.id===id);
+  if(!doc) return;
+  currentDocId = id;
+  document.getElementById('editorEmpty').style.display='none';
+  document.getElementById('editorActive').style.display='flex';
+  document.getElementById('docTitle').value = doc.title;
+  document.getElementById('docContent').value = doc.content;
+  document.getElementById('docStatus').value = doc.status||'draft';
+  document.getElementById('docUniversity').value = doc.university||'';
+  updateStats();
+  isDirty = false;
+  document.getElementById('lastSaved').textContent = 'Saved: '+doc.updated_at;
+  renderDocList();
+}
+
+async function saveDoc(){
+  const title = document.getElementById('docTitle').value||'Untitled';
+  const content = document.getElementById('docContent').value;
+  if(!currentDocId){
+    const res = await fetch('/api/documents/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title,content,type:currentType||'other',status:document.getElementById('docStatus').value,university:document.getElementById('docUniversity').value})});
+    const json = await res.json();
+    currentDocId = json.document.id;
+  } else {
+    await fetch('/api/documents/update',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:currentDocId,title,content,status:document.getElementById('docStatus').value,university:document.getElementById('docUniversity').value})});
+  }
+  isDirty = false;
+  document.getElementById('lastSaved').textContent = 'Saved just now';
+  await loadDocs();
+}
+
+async function deleteDoc(){
+  if(!currentDocId||!confirm('Delete this document?')) return;
+  await fetch('/api/documents/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:currentDocId})});
+  currentDocId = null;
+  document.getElementById('editorEmpty').style.display='flex';
+  document.getElementById('editorActive').style.display='none';
+  await loadDocs();
+}
+
+function filterDocs(type, btn){
+  document.querySelectorAll('.type-chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  currentType = type;
+  loadDocs();
+}
+
+function updateStats(){
+  const txt = document.getElementById('docContent').value;
+  document.getElementById('wordCount').textContent = txt.trim().split(/\s+/).filter(Boolean).length+' words';
+  document.getElementById('charCount').textContent = txt.length+' chars';
+}
+
+function markDirty(){ isDirty=true; document.getElementById('lastSaved').textContent='Unsaved changes…'; }
+
+async function openTemplates(){
+  const res = await fetch('/api/documents/templates');
+  const json = await res.json();
+  document.getElementById('templateGrid').innerHTML = json.templates.map(t=>`
+    <div class="tp-card" onclick="createFromTemplate('${t.id}','${t.label.replace(/'/g,"\\'")}','${t.template.substring(0,50).replace(/\n/g,' ').replace(/'/g,"\\'")}')">
+      <div class="tp-icon"><i class="${t.icon}" style="color:${t.color};"></i></div>
+      <div class="tp-name">${t.label}</div>
+    </div>`).join('');
+  document.getElementById('tpModal').classList.add('open');
+}
+
+async function createFromTemplate(type, label, tmpl){
+  document.getElementById('tpModal').classList.remove('open');
+  const res = await fetch('/api/documents/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,title:'New '+label,content:''})});
+  const json = await res.json();
+  currentType = type;
+  await loadDocs();
+  openDoc(json.document.id);
+}
+
+function openAI(){
+  if(!currentDocId){alert('Please open a document first.');return;}
+  document.getElementById('aiResult').style.display='none';
+  document.getElementById('aiModal').classList.add('open');
+}
+
+async function runAI(){
+  const content = document.getElementById('docContent').value;
+  const instruction = document.getElementById('aiInstruction').value;
+  const btn = document.querySelector('.ai-modal button[onclick="runAI()"]');
+  btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Improving…'; btn.disabled=true;
+  const res = await fetch('/api/documents/ai-improve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content,instruction,type:currentType})});
+  const json = await res.json();
+  btn.innerHTML='<i class="fas fa-bolt"></i> Improve with AI'; btn.disabled=false;
+  if(!json.success){alert(json.error);return;}
+  aiImprovedText = json.improved;
+  document.getElementById('aiImproved').innerText = json.improved;
+  document.getElementById('aiFeedback').innerHTML = '<strong>Improvements made:</strong><br>'+json.feedback.replace(/\n/g,'<br>');
+  document.getElementById('aiResult').style.display='block';
+}
+
+function applyAI(){
+  document.getElementById('docContent').value = aiImprovedText;
+  updateStats(); markDirty();
+  document.getElementById('aiModal').classList.remove('open');
+}
+</script>
+{% endblock %}

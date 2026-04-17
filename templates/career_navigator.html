@@ -1,0 +1,582 @@
+{% extends "base.html" %}
+{% block title %}AI Career Navigator – EduBridge{% endblock %}
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="page-hero page-hero-blue">
+  <div class="container">
+    <div class="page-hero-icon"><i class="fas fa-compass"></i></div>
+    <h1>AI Career Navigator</h1>
+    <p>Deep AI analysis of your profile — personalized country, university &amp; career recommendations with match scores</p>
+    <div class="xp-reward-badge"><i class="fas fa-bolt"></i> Earn 100 XP</div>
+  </div>
+</div>
+
+<div class="container page-container">
+  <div class="tool-layout">
+    <!-- Form -->
+    <div class="tool-form-panel">
+      <div class="card form-card">
+        <h2 class="form-title"><i class="fas fa-user-graduate"></i> Your Complete Profile</h2>
+        <form id="navigatorForm">
+          <div class="form-grid">
+            <div class="form-group form-group-full">
+              <label>Field of Study *</label>
+              <select id="field" required>
+                <option value="">Select field...</option>
+                <option>Computer Science / IT</option>
+                <option>Data Science / AI / ML</option>
+                <option>Electrical Engineering</option>
+                <option>Mechanical Engineering</option>
+                <option>Civil / Structural Engineering</option>
+                <option>Business Administration (MBA)</option>
+                <option>Finance / Economics</option>
+                <option>Biotechnology / Life Sciences</option>
+                <option>Public Policy / International Relations</option>
+                <option>Architecture / Design / UX</option>
+                <option>Law / Legal Studies</option>
+                <option>Medicine / Healthcare</option>
+                <option>Environmental Science</option>
+                <option>Media / Journalism / Communication</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>GPA / CGPA *</label>
+              <input type="text" id="gpa" placeholder="e.g. 8.5/10 or 3.7/4.0" required />
+            </div>
+            <div class="form-group">
+              <label>Budget / Year</label>
+              <select id="budget">
+                <option value="Under ₹10 Lakhs">Under ₹10L</option>
+                <option value="₹10–20 Lakhs">₹10–20L</option>
+                <option value="₹20–40 Lakhs" selected>₹20–40L</option>
+                <option value="₹40–60 Lakhs">₹40–60L</option>
+                <option value="Above ₹60 Lakhs">₹60L+</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>GRE / GMAT Score</label>
+              <input type="text" id="gre_score" placeholder="e.g. GRE 320 / GMAT 700" />
+            </div>
+            <div class="form-group">
+              <label>TOEFL / IELTS</label>
+              <input type="text" id="toefl_score" placeholder="e.g. TOEFL 110 / IELTS 7.5" />
+            </div>
+            <div class="form-group">
+              <label>Work Experience</label>
+              <select id="work_exp">
+                <option value="0">Fresher (0 yrs)</option>
+                <option value="1">1 year</option>
+                <option value="2">2 years</option>
+                <option value="3">3 years</option>
+                <option value="4">4 years</option>
+                <option value="5+">5+ years</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Country Preference</label>
+              <select id="preference">
+                <option value="">No preference</option>
+                <option>USA</option><option>UK</option><option>Canada</option>
+                <option>Germany</option><option>Australia</option><option>Singapore</option>
+                <option>Netherlands</option><option>Ireland</option><option>India (Domestic)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Research / Publications</label>
+              <select id="research">
+                <option value="none">None</option>
+                <option value="minor">Minor projects</option>
+                <option value="moderate">Conference papers</option>
+                <option value="strong">Published journals</option>
+              </select>
+            </div>
+            <div class="form-group form-group-full">
+              <label>Specific Interests / Specialization</label>
+              <input type="text" id="interests" placeholder="e.g. Machine Learning, Robotics, FinTech, Sustainability..." />
+            </div>
+            <div class="form-group form-group-full">
+              <label>Career Goal in 5 Years</label>
+              <input type="text" id="career_goal" placeholder="e.g. Product Manager at a tech company, Research Scientist, Entrepreneur..." />
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" id="navigateBtn">
+            <i class="fas fa-rocket"></i> Analyze My Profile
+          </button>
+        </form>
+      </div>
+
+      <!-- Profile strength preview -->
+      <div class="card" id="profilePreviewCard" style="margin-top:1rem;display:none;">
+        <h4 style="margin-bottom:1rem;font-size:0.9rem;font-weight:700;"><i class="fas fa-tachometer-alt" style="color:var(--primary);"></i> Profile Strength Preview</h4>
+        <canvas id="profileRadarChart" height="220"></canvas>
+        <div class="profile-strength-bar" style="margin-top:1rem;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:0.35rem;font-size:0.8rem;">
+            <span style="font-weight:600;">Overall Strength</span>
+            <span id="overallStrengthVal" style="color:var(--primary);font-weight:700;">—</span>
+          </div>
+          <div style="height:8px;background:var(--gray-200);border-radius:4px;overflow:hidden;">
+            <div id="overallStrengthBar" style="height:100%;background:linear-gradient(90deg,var(--primary),var(--secondary));border-radius:4px;width:0%;transition:width 1s ease;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="tool-results-panel" id="resultsPanel" style="display:none;">
+      <div class="results-loading" id="resultsLoading">
+        <div class="loading-spinner"></div>
+        <p style="font-weight:600;">AI is analyzing your full profile...</p>
+        <div class="loading-steps">
+          <div class="loading-step active" id="ls1">Scoring your academic profile</div>
+          <div class="loading-step" id="ls2">Matching 500+ universities worldwide</div>
+          <div class="loading-step" id="ls3">Analyzing career market data</div>
+          <div class="loading-step" id="ls4">Generating personalized roadmap</div>
+        </div>
+      </div>
+
+      <div id="resultsContent" style="display:none;">
+        <!-- Summary Banner -->
+        <div class="results-banner card" id="summaryBanner" style="margin-bottom:1.25rem;"></div>
+
+        <!-- Countries -->
+        <div class="card results-section">
+          <h3 class="results-section-title"><i class="fas fa-globe-americas"></i> Best Countries For You</h3>
+          <div id="countriesContainer"></div>
+        </div>
+
+        <!-- Universities -->
+        <div class="card results-section">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.75rem;margin-bottom:1rem;">
+            <h3 class="results-section-title" style="margin:0;"><i class="fas fa-university"></i> Top University Matches</h3>
+            <div class="view-toggle-group">
+              <button class="view-toggle-btn active" id="viewCardBtn" onclick="setView('card')"><i class="fas fa-th-large"></i> Card</button>
+              <button class="view-toggle-btn" id="viewTableBtn" onclick="setView('table')"><i class="fas fa-table"></i> Compare Table</button>
+            </div>
+          </div>
+          <div class="uni-filter-bar">
+            <button class="uni-filter-btn active" onclick="filterUnis('all', this)">All</button>
+            <button class="uni-filter-btn" onclick="filterUnis('Reach', this)">Reach 🎯</button>
+            <button class="uni-filter-btn" onclick="filterUnis('Target', this)">Target ✅</button>
+            <button class="uni-filter-btn" onclick="filterUnis('Safe', this)">Safe 🛡️</button>
+          </div>
+          <div id="universitiesContainer"></div>
+          <div id="shortlistBar" style="display:none;margin-top:1rem;" class="shortlist-bar">
+            <span id="shortlistCount">0</span> universities shortlisted
+            <button class="btn btn-sm btn-primary" onclick="exportShortlist()"><i class="fas fa-download"></i> Export List</button>
+          </div>
+        </div>
+
+        <!-- Career Paths & Salaries -->
+        <div class="card results-section">
+          <h3 class="results-section-title"><i class="fas fa-briefcase"></i> Career Pathways &amp; Salary Outlook</h3>
+          <div id="careersContainer"></div>
+          <div style="margin-top:1rem;">
+            <canvas id="salaryChart" height="180"></canvas>
+          </div>
+        </div>
+
+        <!-- Skill Gaps -->
+        <div class="card results-section">
+          <h3 class="results-section-title"><i class="fas fa-puzzle-piece"></i> Skill Gap Analysis</h3>
+          <div id="skillGapsContainer"></div>
+        </div>
+
+        <!-- Action Plan -->
+        <div class="card results-section">
+          <h3 class="results-section-title"><i class="fas fa-tasks"></i> Your 90-Day Action Plan</h3>
+          <div id="actionPlanContainer"></div>
+        </div>
+
+        <div class="next-steps-bar">
+          <span>Next Step:</span>
+          <a href="/admission-predictor" class="btn btn-sm btn-primary">Check Admission Chances <i class="fas fa-arrow-right"></i></a>
+          <a href="/roi-calculator" class="btn btn-sm btn-outline">Calculate ROI</a>
+          <a href="/timeline-generator" class="btn btn-sm btn-outline">Generate Timeline</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let radarChart = null, salaryChart = null;
+const allUniversities = [];
+
+// Compute profile strength from form
+function computeProfileStrength() {
+  const gpa = parseFloat(document.getElementById('gpa').value) || 0;
+  const gre = document.getElementById('gre_score').value;
+  const toefl = document.getElementById('toefl_score').value;
+  const work = parseInt(document.getElementById('work_exp').value) || 0;
+  const research = document.getElementById('research').value;
+  const interests = document.getElementById('interests').value;
+
+  // Score each dimension 0-100
+  const academic = Math.min(gpa > 4 ? (gpa/10*100) : (gpa/4*100), 100);
+  const greScore = gre ? (gre.toLowerCase().includes('gre') ? Math.min(parseInt(gre.replace(/\D/g,'')) > 300 ? ((parseInt(gre.replace(/\D/g,''))-260)/80*100) : 50, 100) : 70) : 40;
+  const langScore = toefl ? (toefl.toLowerCase().includes('ielts') ? Math.min((parseFloat(toefl.replace(/\D+/g,'.'))/9*100), 100) : Math.min(parseInt(toefl.replace(/\D/g,''))/120*100, 100)) : 40;
+  const expScore = Math.min(work * 20, 100);
+  const resScore = research === 'strong' ? 95 : research === 'moderate' ? 70 : research === 'minor' ? 45 : 20;
+  const profileScore = interests.length > 10 ? 80 : 50;
+
+  const overall = Math.round((academic + greScore + langScore + expScore + resScore + profileScore) / 6);
+
+  document.getElementById('profilePreviewCard').style.display = 'block';
+  document.getElementById('overallStrengthVal').textContent = overall + '/100';
+  document.getElementById('overallStrengthBar').style.width = overall + '%';
+
+  if (radarChart) radarChart.destroy();
+  radarChart = new Chart(document.getElementById('profileRadarChart').getContext('2d'), {
+    type: 'radar',
+    data: {
+      labels: ['Academic', 'GRE/GMAT', 'Language', 'Experience', 'Research', 'Profile'],
+      datasets: [{
+        data: [academic, greScore, langScore, expScore, resScore, profileScore],
+        backgroundColor: 'rgba(79,70,229,0.15)',
+        borderColor: '#4f46e5',
+        pointBackgroundColor: '#4f46e5',
+        pointRadius: 4,
+        borderWidth: 2
+      }]
+    },
+    options: {
+      scales: { r: { min: 0, max: 100, ticks: { stepSize: 25, font: { size: 10 } }, pointLabels: { font: { size: 11, weight: 'bold' } } } },
+      plugins: { legend: { display: false } }
+    }
+  });
+  return { academic, greScore, langScore, expScore, resScore, profileScore, overall };
+}
+
+// Form inputs trigger profile preview
+['gpa','gre_score','toefl_score','work_exp','research','interests'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('change', computeProfileStrength);
+  if (el && el.tagName === 'INPUT') el.addEventListener('input', computeProfileStrength);
+});
+
+document.getElementById('navigatorForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('navigateBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="btn-spinner"></div> Analyzing...';
+
+  const resultsPanel = document.getElementById('resultsPanel');
+  resultsPanel.style.display = 'block';
+  document.getElementById('resultsLoading').style.display = 'flex';
+  document.getElementById('resultsContent').style.display = 'none';
+  resultsPanel.scrollIntoView({ behavior: 'smooth' });
+
+  const steps = ['ls1','ls2','ls3','ls4'];
+  let si = 0;
+  const stepInterval = setInterval(() => {
+    if (si > 0) document.getElementById(steps[si-1]).classList.add('done');
+    if (si < steps.length) { document.getElementById(steps[si]).classList.add('active'); si++; }
+    else clearInterval(stepInterval);
+  }, 900);
+
+  const payload = {
+    field: document.getElementById('field').value,
+    gpa: document.getElementById('gpa').value,
+    budget: document.getElementById('budget').value,
+    preference: document.getElementById('preference').value,
+    work_exp: document.getElementById('work_exp').value,
+    gre_score: document.getElementById('gre_score').value,
+    toefl_score: document.getElementById('toefl_score').value,
+    research: document.getElementById('research').value,
+    interests: document.getElementById('interests').value,
+    career_goal: document.getElementById('career_goal').value,
+  };
+
+  try {
+    const res = await fetch('/api/career-navigate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    const data = await res.json();
+    clearInterval(stepInterval);
+    steps.forEach(s => { document.getElementById(s).classList.add('done'); });
+
+    if (data.success) {
+      renderResults(data.data);
+      document.getElementById('resultsLoading').style.display = 'none';
+      document.getElementById('resultsContent').style.display = 'block';
+      await awardXP('career_navigator');
+      showToast('Career analysis complete! +100 XP earned', 'success');
+    } else {
+      showToast('Error: ' + data.error, 'error');
+      resultsPanel.style.display = 'none';
+    }
+  } catch (err) {
+    showToast('Network error. Please try again.', 'error');
+    resultsPanel.style.display = 'none';
+  }
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fas fa-rocket"></i> Analyze My Profile';
+});
+
+function renderResults(d) {
+  // Summary Banner
+  const sb = document.getElementById('summaryBanner');
+  const score = d.overall_profile_score || 72;
+  sb.innerHTML = `
+    <div style="display:flex;align-items:center;gap:2rem;flex-wrap:wrap;">
+      <div style="text-align:center;min-width:100px;">
+        <div style="font-size:3rem;font-weight:900;color:var(--primary);font-family:var(--font-display);">${score}</div>
+        <div style="font-size:0.78rem;color:var(--gray-500);font-weight:600;">PROFILE SCORE</div>
+      </div>
+      <div style="flex:1;min-width:200px;">
+        <div style="font-size:1.1rem;font-weight:700;margin-bottom:0.35rem;">${d.summary || 'Strong profile for top programs'}</div>
+        <div style="height:8px;background:var(--gray-200);border-radius:4px;overflow:hidden;max-width:300px;">
+          <div style="height:100%;width:${score}%;background:linear-gradient(90deg,var(--primary),var(--secondary));border-radius:4px;"></div>
+        </div>
+        <div style="font-size:0.8rem;color:var(--gray-500);margin-top:0.35rem;">${d.profile_tier || 'Competitive applicant'}</div>
+      </div>
+      <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+        <div style="text-align:center;"><div style="font-size:1.25rem;font-weight:800;color:var(--success);">${(d.recommended_countries||[]).length}</div><div style="font-size:0.75rem;color:var(--gray-500);">Countries</div></div>
+        <div style="text-align:center;"><div style="font-size:1.25rem;font-weight:800;color:var(--primary);">${(d.recommended_universities||[]).length}</div><div style="font-size:0.75rem;color:var(--gray-500);">Universities</div></div>
+        <div style="text-align:center;"><div style="font-size:1.25rem;font-weight:800;color:var(--orange);">${(d.career_paths||[]).length}</div><div style="font-size:0.75rem;color:var(--gray-500);">Careers</div></div>
+      </div>
+    </div>`;
+
+  // Countries
+  const cc = document.getElementById('countriesContainer');
+  cc.innerHTML = (d.recommended_countries || []).map((c, i) => `
+    <div class="country-card-advanced ${i === 0 ? 'country-top' : ''}">
+      <div class="country-rank">${i === 0 ? '🏆' : '#' + (i+1)}</div>
+      <div class="country-main">
+        <div class="country-flag-name">
+          <span class="country-flag-lg">${countryFlag(c.country)}</span>
+          <div>
+            <h4>${c.country}</h4>
+            <div class="visa-badge ${visaClass(c.visa_difficulty)}">${c.visa_difficulty} Visa Process</div>
+          </div>
+        </div>
+        <p class="country-reason">${c.reason}</p>
+        <div class="country-meta-row">
+          <div class="country-meta-item"><i class="fas fa-dollar-sign"></i> <span>~$${(c.avg_cost_usd||0).toLocaleString()}/yr total</span></div>
+          <div class="country-meta-item"><i class="fas fa-clock"></i> <span>${c.avg_duration || '2 years'}</span></div>
+          <div class="country-meta-item"><i class="fas fa-briefcase"></i> <span>${c.post_study_work || 'Good OPT/PGWP'}</span></div>
+        </div>
+        ${(c.pros||[]).length ? `<div class="pros-cons"><div class="pros">${c.pros.map(p=>`<span>✓ ${p}</span>`).join('')}</div></div>` : ''}
+      </div>
+      <div class="country-fit-display">
+        <div class="fit-circle" style="background:conic-gradient(var(--primary) 0% ${c.fit_score}%,#e2e8f0 ${c.fit_score}% 100%);">
+          <div class="fit-inner"><span>${c.fit_score}%</span><label>Fit</label></div>
+        </div>
+      </div>
+    </div>`).join('');
+
+  // Universities
+  allUniversities.length = 0;
+  allUniversities.push(...(d.recommended_universities || []));
+  renderUniversities(allUniversities);
+
+  // Careers
+  const carC = document.getElementById('careersContainer');
+  carC.innerHTML = `<div class="careers-grid-advanced">${(d.career_paths || []).map((c, i) => `
+    <div class="career-card-advanced">
+      <div class="career-rank">#${i+1}</div>
+      <h4>${c.role}</h4>
+      <div class="career-salary-display">
+        <span class="salary-inr">₹${formatLakh(Math.round((c.avg_salary_usd||0) * 84))}</span>
+        <span class="salary-usd">($${(c.avg_salary_usd||0).toLocaleString()})</span>
+      </div>
+      <div class="growth-badge ${growthClass(c.growth_outlook)}">${c.growth_outlook} Growth</div>
+      <div class="career-detail">
+        <div><strong>Top Companies:</strong> ${(c.top_companies||[]).join(', ')}</div>
+        ${c.required_skills ? `<div style="margin-top:0.5rem;"><strong>Key Skills:</strong> ${c.required_skills.join(', ')}</div>` : ''}
+      </div>
+      <div class="career-5yr">5yr salary: $${((c.salary_5yr||0)).toLocaleString()} avg</div>
+    </div>`).join('')}</div>`;
+
+  // Salary Chart
+  if (salaryChart) salaryChart.destroy();
+  const careers = d.career_paths || [];
+  if (careers.length) {
+    const ctx = document.getElementById('salaryChart').getContext('2d');
+    salaryChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: careers.map(c => c.role),
+        datasets: [
+          { label: 'Starting ($)', data: careers.map(c => c.avg_salary_usd || 0), backgroundColor: 'rgba(79,70,229,0.7)', borderRadius: 6 },
+          { label: '5-Year ($)', data: careers.map(c => c.salary_5yr || (c.avg_salary_usd * 1.4) || 0), backgroundColor: 'rgba(14,165,233,0.7)', borderRadius: 6 }
+        ]
+      },
+      options: { responsive: true, plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: ctx => '$' + ctx.raw.toLocaleString() } } }, scales: { y: { ticks: { callback: v => '$' + (v/1000).toFixed(0) + 'K' }, grid: { color: 'rgba(0,0,0,0.05)' } } } }
+    });
+  }
+
+  // Skill Gaps
+  const sg = document.getElementById('skillGapsContainer');
+  sg.innerHTML = (d.skill_gaps || []).map(gap => `
+    <div class="skill-gap-item">
+      <div class="skill-gap-header">
+        <span class="skill-name">${gap.skill}</span>
+        <span class="skill-importance importance-${(gap.importance||'').toLowerCase()}">${gap.importance} priority</span>
+      </div>
+      <div style="height:6px;background:var(--gray-200);border-radius:3px;margin:0.4rem 0;overflow:hidden;">
+        <div style="height:100%;width:${gap.current_level||30}%;background:${gap.current_level>=70?'var(--success)':gap.current_level>=40?'var(--warning)':'var(--danger)'};border-radius:3px;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--gray-500);">
+        <span>Current: ${gap.current_level || '?'}%</span>
+        <span>Resources: ${(gap.resources||[]).join(', ')}</span>
+      </div>
+    </div>`).join('') || '<p style="color:var(--gray-500);">No major skill gaps identified for your profile.</p>';
+
+  // Action Plan
+  const ap = document.getElementById('actionPlanContainer');
+  const plan = d.action_plan || d.action_items || [];
+  if (Array.isArray(plan) && plan.length && typeof plan[0] === 'object') {
+    ap.innerHTML = `<div class="action-phases">${(plan||[]).map(phase => `
+      <div class="action-phase">
+        <div class="phase-header">
+          <span class="phase-period">${phase.period || 'Phase'}</span>
+          <span class="phase-focus">${phase.focus || ''}</span>
+        </div>
+        <ul class="phase-tasks">${(phase.tasks||[]).map(t => `<li><i class="fas fa-check-circle"></i> ${t}</li>`).join('')}</ul>
+      </div>`).join('')}</div>`;
+  } else {
+    ap.innerHTML = '<ul class="action-list">' + (plan||[]).map((a, i) => `
+      <li class="action-item">
+        <div class="action-num">${i+1}</div>
+        <span>${typeof a === 'string' ? a : a.task || a}</span>
+      </li>`).join('') + '</ul>';
+  }
+}
+
+let currentView = 'card';
+let currentFilteredUnis = [];
+
+function setView(view) {
+  currentView = view;
+  document.getElementById('viewCardBtn').classList.toggle('active', view === 'card');
+  document.getElementById('viewTableBtn').classList.toggle('active', view === 'table');
+  renderUniversities(currentFilteredUnis.length ? currentFilteredUnis : allUniversities);
+}
+
+function renderUniversities(unis) {
+  currentFilteredUnis = unis;
+  const uc = document.getElementById('universitiesContainer');
+  if (currentView === 'table') {
+    uc.innerHTML = `<div style="overflow-x:auto;margin-top:0.5rem;">
+      <table class="uni-compare-table">
+        <thead>
+          <tr>
+            <th><input type="checkbox" id="selectAllChk" onchange="selectAll(this)"></th>
+            <th onclick="sortTable('tier')">Tier ↕</th>
+            <th onclick="sortTable('name')">University ↕</th>
+            <th>Country</th>
+            <th>Program</th>
+            <th onclick="sortTable('tuition_usd')">Tuition/yr ↕</th>
+            <th onclick="sortTable('acceptance_rate')">Accept. % ↕</th>
+            <th onclick="sortTable('avg_gpa')">Avg GPA ↕</th>
+            <th onclick="sortTable('match_score')">Match % ↕</th>
+            <th>Best For</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${unis.map((u, i) => {
+            const tierColor = u.tier === 'Reach' ? '#ef4444' : u.tier === 'Target' ? '#4f46e5' : '#10b981';
+            const matchColor = (u.match_score||75) >= 80 ? '#10b981' : (u.match_score||75) >= 65 ? '#f59e0b' : '#ef4444';
+            return `<tr>
+              <td><input type="checkbox" class="uni-checkbox" data-name="${u.name}" onchange="toggleShortlist(this,'${u.name}')"></td>
+              <td><span style="background:${tierColor}15;color:${tierColor};padding:0.2rem 0.5rem;border-radius:4px;font-size:0.75rem;font-weight:700;">${u.tier||'Target'}</span></td>
+              <td style="font-weight:700;min-width:160px;">${u.name}</td>
+              <td>${countryFlag(u.country)} ${u.country}</td>
+              <td style="font-size:0.8rem;color:var(--gray-600);min-width:140px;">${u.program}</td>
+              <td style="font-weight:700;">$${((u.tuition_usd||0)/1000).toFixed(0)}K</td>
+              <td style="color:${(u.acceptance_rate||50)>25?'var(--success)':'var(--warning)'};">${u.acceptance_rate||'?'}%</td>
+              <td>${u.avg_gpa||'?'}</td>
+              <td><div style="display:flex;align-items:center;gap:0.5rem;">
+                <div style="flex:1;height:6px;background:#e2e8f0;border-radius:3px;min-width:60px;"><div style="width:${u.match_score||75}%;height:100%;background:${matchColor};border-radius:3px;"></div></div>
+                <strong style="color:${matchColor};font-size:0.85rem;">${u.match_score||75}%</strong>
+              </div></td>
+              <td style="font-size:0.75rem;color:var(--gray-600);">${u.fit_reason ? u.fit_reason.substring(0,60)+'...' : '—'}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  } else {
+    uc.innerHTML = unis.map((u, i) => `
+      <div class="uni-row-advanced" data-tier="${u.tier || 'Target'}">
+        <div class="uni-checkbox-col">
+          <input type="checkbox" class="uni-checkbox" onchange="toggleShortlist(this, '${u.name}')">
+        </div>
+        <div class="uni-rank-badge uni-rank-badge-${(u.tier||'target').toLowerCase()}">${u.tier || 'Target'}</div>
+        <div class="uni-info">
+          <div class="uni-name-row">
+            <h4>${u.name}</h4>
+            <span class="uni-flag">${countryFlag(u.country)}</span>
+            <span class="uni-country-label">${u.country}</span>
+          </div>
+          <p class="uni-program">${u.program}</p>
+          <p class="uni-reason">${u.fit_reason}</p>
+          ${u.notable_alumni ? `<p style="font-size:0.75rem;color:var(--gray-400);margin-top:0.25rem;"><i class="fas fa-users"></i> Alumni: ${u.notable_alumni}</p>` : ''}
+        </div>
+        <div class="uni-metrics">
+          <div class="uni-metric"><span class="metric-val">$${((u.tuition_usd||0)/1000).toFixed(0)}K</span><span class="metric-label">Tuition/yr</span></div>
+          <div class="uni-metric"><span class="metric-val">${u.acceptance_rate || '?'}%</span><span class="metric-label">Acceptance</span></div>
+          <div class="uni-metric"><span class="metric-val">${u.avg_gpa || '?'}</span><span class="metric-label">Avg GPA</span></div>
+          <div class="uni-metric">
+            <div style="width:50px;height:50px;background:conic-gradient(var(--primary) 0% ${u.match_score||75}%,#e2e8f0 ${u.match_score||75}% 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+              <div style="width:36px;height:36px;background:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:800;color:var(--primary);">${u.match_score||75}%</div>
+            </div>
+            <span class="metric-label">Match</span>
+          </div>
+        </div>
+      </div>`).join('');
+  }
+}
+
+let tableSortDir = {};
+function sortTable(key) {
+  const dir = tableSortDir[key] === 'asc' ? 'desc' : 'asc';
+  tableSortDir[key] = dir;
+  const sorted = [...currentFilteredUnis].sort((a, b) => {
+    let va = a[key] ?? 0, vb = b[key] ?? 0;
+    if (key === 'tier') { const order = { Reach: 1, Target: 2, Safe: 3 }; va = order[va] || 2; vb = order[vb] || 2; }
+    if (key === 'name') return dir === 'asc' ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va));
+    return dir === 'asc' ? va - vb : vb - va;
+  });
+  renderUniversities(sorted);
+}
+
+function selectAll(cb) {
+  document.querySelectorAll('.uni-checkbox').forEach(chk => {
+    chk.checked = cb.checked;
+    toggleShortlist(chk, chk.dataset.name);
+  });
+}
+
+let shortlisted = [];
+function toggleShortlist(cb, name) {
+  if (cb.checked) { if (!shortlisted.includes(name)) shortlisted.push(name); }
+  else shortlisted = shortlisted.filter(n => n !== name);
+  document.getElementById('shortlistCount').textContent = shortlisted.length;
+  document.getElementById('shortlistBar').style.display = shortlisted.length ? 'flex' : 'none';
+}
+
+function filterUnis(tier, btn) {
+  document.querySelectorAll('.uni-filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const filtered = tier === 'all' ? allUniversities : allUniversities.filter(u => u.tier === tier);
+  renderUniversities(filtered);
+}
+
+function exportShortlist() {
+  const text = 'My University Shortlist:\n' + shortlisted.join('\n');
+  const blob = new Blob([text], { type: 'text/plain' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'university_shortlist.txt'; a.click();
+}
+
+function countryFlag(c) { return ({USA:'🇺🇸',UK:'🇬🇧',Canada:'🇨🇦',Germany:'🇩🇪',Australia:'🇦🇺',Singapore:'🇸🇬',Netherlands:'🇳🇱',Ireland:'🇮🇪',India:'🇮🇳',France:'🇫🇷',Japan:'🇯🇵',Sweden:'🇸🇪'})[c] || '🌍'; }
+function visaClass(v) { return v === 'Easy' ? 'visa-easy' : v === 'Medium' ? 'visa-medium' : 'visa-hard'; }
+function growthClass(g) { return g === 'Excellent' ? 'growth-excellent' : g === 'Good' ? 'growth-good' : 'growth-moderate'; }
+function formatLakh(n) { if (!n) return '0'; if (n >= 10000000) return (n/10000000).toFixed(1)+'Cr'; if (n >= 100000) return (n/100000).toFixed(1)+'L'; return n.toLocaleString(); }
+</script>
+{% endblock %}

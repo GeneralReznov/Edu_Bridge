@@ -1,0 +1,380 @@
+{% extends "base.html" %}
+{% block title %}Interview Prep – EduBridge AI{% endblock %}
+{% block head %}
+<style>
+.ip-hero{background:linear-gradient(135deg,#1a0505,#7f1d1d,#dc2626);color:#fff;padding:48px 0 32px;text-align:center;}
+.ip-hero h1{font-size:2rem;font-weight:800;margin-bottom:6px;}
+.ip-badge{display:inline-block;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:4px 14px;font-size:.8rem;font-weight:600;margin-bottom:14px;}
+.ip-main{max-width:1200px;margin:0 auto;padding:24px 16px;}
+.ip-layout{display:grid;grid-template-columns:300px 1fr;gap:24px;align-items:start;}
+
+/* Left Panel */
+.ip-config{background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.08);padding:24px;position:sticky;top:80px;}
+.ip-config h3{font-size:.95rem;font-weight:800;color:#1e293b;margin:0 0 16px;}
+.fl{font-size:.75rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin:12px 0 5px;}
+.ip-config select{width:100%;box-sizing:border-box;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.85rem;font-family:inherit;}
+.ip-config select:focus{outline:none;border-color:#dc2626;}
+.filter-btn{width:100%;padding:10px;background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;margin-top:12px;font-size:.9rem;}
+.mock-btn{width:100%;padding:10px;background:linear-gradient(135deg,#1e293b,#334155);color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;margin-top:8px;font-size:.9rem;}
+
+.history-card{background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.08);padding:20px;margin-top:16px;}
+.history-card h4{font-size:.85rem;font-weight:800;color:#1e293b;margin:0 0 12px;}
+.hist-row{display:flex;justify-content:space-between;font-size:.8rem;padding:6px 0;border-bottom:1px solid #f1f5f9;color:#475569;}
+.hist-row:last-child{border:none;}
+.score-pill{padding:2px 8px;border-radius:8px;font-weight:700;font-size:.75rem;}
+.s-high{background:#d1fae5;color:#16a34a;}
+.s-mid{background:#dbeafe;color:#1d4ed8;}
+.s-low{background:#fee2e2;color:#dc2626;}
+
+.stats-mini{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.sm-card{background:#f8fafc;border-radius:10px;padding:10px;text-align:center;}
+.sm-val{font-size:1.3rem;font-weight:800;color:#dc2626;}
+.sm-label{font-size:.7rem;color:#64748b;}
+
+/* Right Panel */
+.frameworks-row{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:24px;}
+.fw-card{background:#fff;border-radius:12px;box-shadow:0 3px 12px rgba(0,0,0,.07);padding:16px;cursor:pointer;border:2px solid transparent;transition:.2s;}
+.fw-card:hover,.fw-card.active{border-color:#dc2626;}
+.fw-icon{font-size:1.3rem;margin-bottom:6px;}
+.fw-name{font-size:.85rem;font-weight:800;color:#1e293b;margin-bottom:2px;}
+.fw-desc{font-size:.75rem;color:#64748b;}
+.fw-steps{display:none;margin-top:10px;}
+.fw-card.active .fw-steps{display:block;}
+.fw-step{font-size:.78rem;color:#475569;padding:3px 0;border-bottom:1px solid #f1f5f9;display:flex;gap:8px;}
+.fw-step:last-child{border:none;}
+.fw-step-num{font-weight:800;color:#dc2626;width:16px;flex-shrink:0;}
+
+.questions-section h3{font-size:1rem;font-weight:800;color:#1e293b;margin:0 0 14px;display:flex;align-items:center;gap:8px;}
+.q-count{background:#fee2e2;color:#dc2626;padding:2px 8px;border-radius:8px;font-size:.78rem;font-weight:700;}
+
+.q-card{background:#fff;border-radius:14px;box-shadow:0 3px 16px rgba(0,0,0,.07);margin-bottom:12px;overflow:hidden;}
+.q-header{padding:16px 18px;cursor:pointer;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.q-header:hover{background:#fef2f2;}
+.qh-left{flex:1;}
+.q-category-tag{padding:2px 8px;border-radius:8px;font-size:.7rem;font-weight:700;margin-bottom:6px;display:inline-block;}
+.cat-behavioral{background:#ede9fe;color:#7c3aed;}
+.cat-technical{background:#dbeafe;color:#1d4ed8;}
+.cat-research{background:#d1fae5;color:#16a34a;}
+.cat-motivation{background:#fef3c7;color:#d97706;}
+.q-text{font-size:.9rem;font-weight:700;color:#1e293b;line-height:1.4;}
+.q-meta{font-size:.75rem;color:#94a3b8;margin-top:4px;display:flex;gap:10px;}
+.q-expand-icon{color:#94a3b8;font-size:.85rem;flex-shrink:0;margin-top:2px;}
+.diff-easy{color:#16a34a;font-weight:700;}
+.diff-medium{color:#f59e0b;font-weight:700;}
+.diff-hard{color:#dc2626;font-weight:700;}
+
+.q-body{padding:0 18px;display:none;}
+.q-body.open{display:block;padding:0 18px 18px;}
+.tip-box{background:#fff7ed;border-left:3px solid #f97316;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:.83rem;color:#92400e;line-height:1.6;}
+.tip-label{font-weight:800;margin-bottom:4px;display:block;}
+.answer-ta{width:100%;box-sizing:border-box;padding:12px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:.88rem;font-family:inherit;min-height:100px;resize:vertical;}
+.answer-ta:focus{outline:none;border-color:#dc2626;}
+.timer-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.timer{font-size:.82rem;color:#64748b;font-family:monospace;}
+.time-limit{font-size:.75rem;color:#94a3b8;}
+.eval-btn{padding:9px 22px;background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:.88rem;margin-top:10px;}
+.eval-btn:disabled{opacity:.6;cursor:not-allowed;}
+
+/* Evaluation Result */
+.eval-result{background:#f8fafc;border-radius:12px;padding:18px;margin-top:14px;}
+.er-score-row{display:flex;align-items:center;gap:14px;margin-bottom:16px;}
+.er-score{width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:900;flex-shrink:0;}
+.er-grade{font-size:1.5rem;font-weight:900;}
+.er-verdict{font-size:.85rem;color:#64748b;}
+.score-bars{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px;}
+.sb-item{text-align:center;}
+.sb-bar-bg{height:60px;background:#f1f5f9;border-radius:6px;display:flex;align-items:flex-end;overflow:hidden;}
+.sb-bar-fill{width:100%;border-radius:6px;transition:height .6s ease;}
+.sb-label{font-size:.65rem;color:#64748b;margin-top:4px;font-weight:600;}
+.sb-val{font-size:.75rem;font-weight:800;color:#1e293b;margin-top:2px;}
+.er-section{margin-bottom:12px;}
+.er-section h5{font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;margin:0 0 6px;}
+.er-section ul{margin:0;padding-left:16px;}
+.er-section li{font-size:.82rem;color:#475569;line-height:1.7;}
+.model-answer{background:#ecfdf5;border-radius:10px;padding:12px 14px;font-size:.82rem;color:#065f46;line-height:1.6;margin-top:8px;}
+.follow-up-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.fup-chip{background:#ede9fe;color:#6366f1;padding:4px 10px;border-radius:8px;font-size:.75rem;font-weight:600;}
+
+/* Mock Session */
+.mock-session{background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.08);padding:24px;margin-bottom:24px;display:none;}
+.ms-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.ms-header h3{font-size:1rem;font-weight:800;color:#1e293b;margin:0;}
+.ms-progress{font-size:.85rem;color:#64748b;}
+.ms-q{font-size:1rem;font-weight:700;color:#1e293b;margin-bottom:16px;line-height:1.5;}
+.ms-nav{display:flex;gap:10px;margin-top:14px;}
+.ms-btn{padding:9px 20px;border-radius:10px;font-weight:700;cursor:pointer;border:none;font-size:.88rem;}
+.ms-btn.prev{background:#f1f5f9;color:#475569;}
+.ms-btn.next{background:#dc2626;color:#fff;}
+.ms-btn.end{background:#1e293b;color:#fff;}
+
+@media(max-width:900px){.ip-layout{grid-template-columns:1fr;}.frameworks-row{grid-template-columns:1fr 1fr;}}
+@media(max-width:600px){.frameworks-row{grid-template-columns:1fr;}}
+</style>
+{% endblock %}
+{% block content %}
+<div class="ip-hero">
+  <div class="ip-badge">🎤 Interview Prep</div>
+  <h1>AI-Powered Interview Practice</h1>
+  <p style="opacity:.85;margin:0;font-size:.95rem;">Practice with real questions, get instant AI feedback & scoring</p>
+</div>
+
+<div class="ip-main">
+  <div class="ip-layout">
+    <!-- LEFT: Config -->
+    <div>
+      <div class="ip-config">
+        <h3><i class="fas fa-sliders-h" style="color:#dc2626;"></i> Filters</h3>
+        <div class="fl">Program Type</div>
+        <select id="programType">
+          <option value="cs">CS / Engineering / Data Science</option>
+          <option value="mba">MBA / Business</option>
+          <option value="phd">PhD / Research</option>
+        </select>
+        <div class="fl">Category</div>
+        <select id="categoryFilter">
+          <option value="all">All Categories</option>
+          <option value="behavioral">Behavioral</option>
+          <option value="technical">Technical</option>
+          <option value="research">Research</option>
+          <option value="motivation">Motivation</option>
+        </select>
+        <div class="fl">Difficulty</div>
+        <select id="diffFilter">
+          <option value="all">All Levels</option>
+          <option value="easy">Easy</option>
+          <option value="medium">Medium</option>
+          <option value="hard">Hard</option>
+        </select>
+        <button class="filter-btn" onclick="loadQuestions()"><i class="fas fa-filter"></i> Apply Filters</button>
+        <button class="mock-btn" onclick="startMockSession()"><i class="fas fa-play"></i> Start Mock Interview (5Q)</button>
+      </div>
+
+      <div class="history-card" id="historyCard">
+        <h4><i class="fas fa-history" style="color:#dc2626;"></i> Practice History</h4>
+        <div class="stats-mini" id="histStats">
+          <div class="sm-card"><div class="sm-val" id="hAvg">—</div><div class="sm-label">Avg Score</div></div>
+          <div class="sm-card"><div class="sm-val" id="hTotal" style="color:#1d4ed8;">0</div><div class="sm-label">Practiced</div></div>
+        </div>
+        <div id="histList"><p style="font-size:.82rem;color:#94a3b8;">No practice history yet.</p></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Content -->
+    <div>
+      <!-- Mock Session Panel -->
+      <div class="mock-session" id="mockSession">
+        <div class="ms-header">
+          <h3><i class="fas fa-video" style="color:#dc2626;"></i> Mock Interview Session</h3>
+          <span class="ms-progress" id="ms-progress">Q 1/5</span>
+        </div>
+        <div id="ms-category" style="margin-bottom:8px;"></div>
+        <div class="ms-q" id="ms-question"></div>
+        <div style="font-size:.8rem;color:#94a3b8;background:#fff7ed;border-radius:8px;padding:8px 12px;margin-bottom:10px;">
+          <i class="fas fa-lightbulb" style="color:#f97316;"></i> <span id="ms-tip"></span>
+        </div>
+        <div class="ms-nav">
+          <button class="ms-btn prev" onclick="mockNav(-1)"><i class="fas fa-arrow-left"></i> Prev</button>
+          <button class="ms-btn next" onclick="mockNav(1)">Next <i class="fas fa-arrow-right"></i></button>
+          <button class="ms-btn end" onclick="endMock()"><i class="fas fa-stop"></i> End Session</button>
+        </div>
+      </div>
+
+      <!-- Frameworks -->
+      <h3 style="font-size:1rem;font-weight:800;color:#1e293b;margin-bottom:12px;"><i class="fas fa-sitemap" style="color:#dc2626;"></i> Answer Frameworks</h3>
+      <div class="frameworks-row" id="frameworksRow"></div>
+
+      <!-- Questions -->
+      <div class="questions-section">
+        <h3><i class="fas fa-question-circle" style="color:#dc2626;"></i> Practice Questions <span class="q-count" id="qCount">0</span></h3>
+        <div id="questionsList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+let allQuestions = [];
+let allFrameworks = [];
+let mockQuestions = [];
+let mockIdx = 0;
+let timers = {};
+
+async function loadQuestions() {
+  const type = document.getElementById('programType').value;
+  const cat = document.getElementById('categoryFilter').value;
+  const diff = document.getElementById('diffFilter').value;
+  const res = await fetch(`/api/interview/questions?type=${type}&category=${cat}&difficulty=${diff}`);
+  const d = await res.json();
+  if(!d.success) return;
+  allQuestions = d.questions;
+  allFrameworks = d.frameworks;
+  document.getElementById('qCount').textContent = allQuestions.length;
+  renderFrameworks();
+  renderQuestions();
+  loadHistory();
+}
+
+function renderFrameworks() {
+  document.getElementById('frameworksRow').innerHTML = allFrameworks.map((f,i) => `
+    <div class="fw-card" onclick="toggleFW(this)">
+      <div class="fw-icon">${f.icon}</div>
+      <div class="fw-name">${f.name}</div>
+      <div class="fw-desc">${f.desc}</div>
+      <div class="fw-steps">${f.steps.map((s,si)=>`<div class="fw-step"><span class="fw-step-num">${si+1}</span><span>${s}</span></div>`).join('')}</div>
+    </div>`).join('');
+}
+
+function toggleFW(el) {
+  document.querySelectorAll('.fw-card').forEach(c=>c.classList.remove('active'));
+  el.classList.toggle('active');
+}
+
+function catClass(c) {
+  const map = {behavioral:'cat-behavioral',technical:'cat-technical',research:'cat-research',motivation:'cat-motivation'};
+  return map[c]||'cat-behavioral';
+}
+function diffClass(d) {
+  return d==='Easy'?'diff-easy':d==='Hard'?'diff-hard':'diff-medium';
+}
+
+function renderQuestions() {
+  document.getElementById('questionsList').innerHTML = allQuestions.map((q,i) => `
+    <div class="q-card" id="qcard-${i}">
+      <div class="q-header" onclick="toggleQ(${i})">
+        <div class="qh-left">
+          <span class="q-category-tag ${catClass(q.category)}">${q.category}</span>
+          <div class="q-text">${q.q}</div>
+          <div class="q-meta">
+            <span class="${diffClass(q.difficulty)}">${q.difficulty}</span>
+            <span>⏱ ${q.time}s limit</span>
+          </div>
+        </div>
+        <i class="fas fa-chevron-down q-expand-icon" id="icon-${i}"></i>
+      </div>
+      <div class="q-body" id="qbody-${i}">
+        <div class="tip-box"><span class="tip-label">💡 Interview Tip</span>${q.tip}</div>
+        <div class="timer-row">
+          <span class="timer" id="timer-${i}">Ready to start</span>
+          <span class="time-limit">Limit: ${q.time}s</span>
+        </div>
+        <textarea class="answer-ta" id="ans-${i}" placeholder="Type your answer here... Take your time to structure it well." onfocus="startTimer(${i},${q.time})"></textarea>
+        <button class="eval-btn" id="eval-btn-${i}" onclick="evaluateAnswer(${i},'${q.q.replace(/'/g,"\\'")}','${q.category}','${q.tip.replace(/'/g,"\\'")}')">
+          <i class="fas fa-robot"></i> Evaluate with AI (+30 XP)
+        </button>
+        <div id="eval-result-${i}"></div>
+      </div>
+    </div>`).join('');
+}
+
+function toggleQ(i) {
+  const body = document.getElementById(`qbody-${i}`);
+  const icon = document.getElementById(`icon-${i}`);
+  const isOpen = body.classList.contains('open');
+  document.querySelectorAll('.q-body').forEach(b=>b.classList.remove('open'));
+  document.querySelectorAll('.q-expand-icon').forEach(ic=>ic.style.transform='');
+  if(!isOpen){body.classList.add('open');icon.style.transform='rotate(180deg)';}
+}
+
+function startTimer(qIdx, limit) {
+  if(timers[qIdx]) return;
+  let elapsed = 0;
+  timers[qIdx] = setInterval(()=>{
+    elapsed++;
+    const el = document.getElementById(`timer-${qIdx}`);
+    if(!el) return;
+    const remaining = limit - elapsed;
+    if(remaining>0){
+      el.textContent = `⏱ ${Math.floor(elapsed/60)}:${String(elapsed%60).padStart(2,'0')} elapsed (${remaining}s left)`;
+      el.style.color = remaining<30?'#dc2626':'#64748b';
+    } else {
+      el.textContent = `⏰ Time's up! (${elapsed}s)`;
+      el.style.color='#dc2626';
+    }
+  }, 1000);
+}
+
+async function evaluateAnswer(idx, question, category, tip) {
+  const answer = document.getElementById(`ans-${idx}`).value.trim();
+  if(!answer||answer.length<30){alert('Please write a more detailed answer (at least 30 characters).');return;}
+  const btn = document.getElementById(`eval-btn-${idx}`);
+  btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Evaluating...';
+  try {
+    const res = await fetch('/api/interview/evaluate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,answer,category,tip})});
+    const d = await res.json();
+    if(!d.success){alert(d.error||'Evaluation failed.');btn.disabled=false;btn.innerHTML='<i class="fas fa-robot"></i> Evaluate with AI (+30 XP)';return;}
+    const e = d.evaluation;
+    if(d.xp_gained&&window.awardXP) awardXP(d.xp_gained);
+    const scoreColor = e.overall_score>=80?'#16a34a':e.overall_score>=60?'#1d4ed8':'#dc2626';
+    const scoreBg = e.overall_score>=80?'#d1fae5':e.overall_score>=60?'#dbeafe':'#fee2e2';
+    const scoreKeys = ['content','structure','specificity','confidence','relevance'];
+    document.getElementById(`eval-result-${idx}`).innerHTML = `
+      <div class="eval-result">
+        <div class="er-score-row">
+          <div class="er-score" style="background:${scoreBg};color:${scoreColor};">${e.overall_score}</div>
+          <div>
+            <div class="er-grade" style="color:${scoreColor};">${e.grade}</div>
+            <div class="er-verdict">${e.verdict}</div>
+          </div>
+        </div>
+        <div class="score-bars">
+          ${scoreKeys.map(k=>{const v=e.scores?.[k]||0;const c=v>=80?'#16a34a':v>=60?'#1d4ed8':'#dc2626';return`<div class="sb-item"><div class="sb-bar-bg"><div class="sb-bar-fill" style="height:${v}%;background:${c};"></div></div><div class="sb-label">${k}</div><div class="sb-val">${v}</div></div>`}).join('')}
+        </div>
+        <div class="er-section"><h5 style="color:#16a34a;">✓ Strengths</h5><ul>${(e.strengths||[]).map(s=>`<li>${s}</li>`).join('')}</ul></div>
+        <div class="er-section"><h5 style="color:#dc2626;">⚠ Improvements</h5><ul>${(e.improvements||[]).map(s=>`<li>${s}</li>`).join('')}</ul></div>
+        <div class="er-section"><h5 style="color:#1d4ed8;">💡 Model Answer Start</h5><div class="model-answer">${e.example_strong_answer||''}</div></div>
+        <div class="er-section"><h5 style="color:#7c3aed;">❓ Likely Follow-up Questions</h5><div class="follow-up-chips">${(e.follow_up_questions||[]).map(q=>`<span class="fup-chip">${q}</span>`).join('')}</div></div>
+      </div>`;
+    loadHistory();
+  } catch(err){alert('Error: '+err.message);}
+  btn.disabled=false;btn.innerHTML='<i class="fas fa-robot"></i> Re-evaluate';
+}
+
+async function loadHistory() {
+  const res = await fetch('/api/interview/history');
+  const d = await res.json();
+  if(!d.success) return;
+  document.getElementById('hAvg').textContent = d.avg_score||0;
+  document.getElementById('hTotal').textContent = d.total_practiced;
+  const list = document.getElementById('histList');
+  if(!d.history.length){list.innerHTML='<p style="font-size:.82rem;color:#94a3b8;">No practice yet. Start answering questions!</p>';return;}
+  list.innerHTML = d.history.slice(-6).reverse().map(h=>{
+    const cls = h.score>=80?'s-high':h.score>=60?'s-mid':'s-low';
+    return`<div class="hist-row"><span>${h.question.substring(0,45)}...</span><span class="score-pill ${cls}">${h.score}</span></div>`;
+  }).join('');
+}
+
+async function startMockSession() {
+  const type = document.getElementById('programType').value;
+  const res = await fetch('/api/interview/mock-session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,count:5})});
+  const d = await res.json();
+  if(!d.success) return;
+  mockQuestions = d.session;
+  mockIdx = 0;
+  document.getElementById('mockSession').style.display='block';
+  document.getElementById('mockSession').scrollIntoView({behavior:'smooth'});
+  updateMock();
+}
+
+function updateMock() {
+  if(!mockQuestions.length) return;
+  const q = mockQuestions[mockIdx];
+  document.getElementById('ms-progress').textContent = `Q ${mockIdx+1}/${mockQuestions.length}`;
+  document.getElementById('ms-category').innerHTML = `<span class="q-category-tag ${catClass(q.category)}">${q.category}</span> <span class="${diffClass(q.difficulty)}" style="font-size:.78rem;margin-left:4px;">${q.difficulty}</span>`;
+  document.getElementById('ms-question').textContent = q.q;
+  document.getElementById('ms-tip').textContent = q.tip;
+}
+
+function mockNav(dir) {
+  const newIdx = mockIdx + dir;
+  if(newIdx>=0&&newIdx<mockQuestions.length){mockIdx=newIdx;updateMock();}
+}
+
+function endMock() {
+  document.getElementById('mockSession').style.display='none';
+  mockQuestions=[];mockIdx=0;
+}
+
+loadQuestions();
+</script>
+{% endblock %}

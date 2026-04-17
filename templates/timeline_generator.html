@@ -1,0 +1,324 @@
+{% extends "base.html" %}
+{% block title %}Application Timeline Generator – EduBridge{% endblock %}
+
+{% block content %}
+<div class="page-hero page-hero-orange">
+  <div class="container">
+    <div class="page-hero-icon"><i class="fas fa-calendar-alt"></i></div>
+    <h1>Application Timeline Generator</h1>
+    <p>AI-generated personalized month-by-month roadmap with interactive progress tracking, deadlines, and milestone checkoffs</p>
+    <div class="xp-reward-badge"><i class="fas fa-bolt"></i> Earn 70 XP</div>
+  </div>
+</div>
+
+<div class="container page-container">
+  <div class="tool-layout">
+    <div class="tool-form-panel">
+      <div class="card form-card">
+        <h2 class="form-title"><i class="fas fa-map-signs"></i> Your Application Plan</h2>
+        <form id="timelineForm">
+          <div class="form-grid">
+            <div class="form-group form-group-full">
+              <label>Target Intake *</label>
+              <select id="tl_intake" required>
+                <option>Fall 2025</option>
+                <option>Spring 2026</option>
+                <option>Fall 2026</option>
+                <option>Spring 2027</option>
+                <option>Fall 2027</option>
+              </select>
+            </div>
+            <div class="form-group form-group-full">
+              <label>Program *</label>
+              <input type="text" id="tl_program" placeholder="e.g. MS Computer Science" required />
+            </div>
+            <div class="form-group">
+              <label>Target Country</label>
+              <select id="tl_country">
+                <option>USA</option><option>UK</option><option>Canada</option>
+                <option>Germany</option><option>Australia</option><option>India (Domestic)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Current Status</label>
+              <select id="tl_status">
+                <option value="Just starting">Just starting to explore</option>
+                <option value="GRE Prep">Preparing for GRE/GMAT</option>
+                <option value="Shortlisting">Shortlisting universities</option>
+                <option value="Applications started">Applications in progress</option>
+                <option value="Admitted">Admitted – planning visa/loans</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Target Applications</label>
+              <select id="tl_num_apps">
+                <option value="5">5–7 universities</option>
+                <option value="10" selected>8–12 universities</option>
+                <option value="15">13–15+ universities</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Deadline Type</label>
+              <select id="tl_deadline">
+                <option value="regular">Regular Decision</option>
+                <option value="early">Early Action (Oct–Nov)</option>
+                <option value="rolling">Rolling Admissions</option>
+              </select>
+            </div>
+            <div class="form-group"><label><input type="checkbox" id="tl_gre" style="margin-right:0.5rem;"> GRE/GMAT taken</label></div>
+            <div class="form-group"><label><input type="checkbox" id="tl_toefl" style="margin-right:0.5rem;"> TOEFL/IELTS taken</label></div>
+            <div class="form-group"><label><input type="checkbox" id="tl_sop_done" style="margin-right:0.5rem;"> SOP drafted</label></div>
+            <div class="form-group"><label><input type="checkbox" id="tl_lors_done" style="margin-right:0.5rem;"> LORs arranged</label></div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" id="timelineBtn">
+            <i class="fas fa-calendar-check"></i> Generate My Timeline
+          </button>
+        </form>
+      </div>
+
+      <!-- Progress tracker (shown after generation) -->
+      <div class="card" id="progressCard" style="display:none;margin-top:1rem;">
+        <h4 style="font-size:0.9rem;font-weight:700;margin-bottom:0.75rem;"><i class="fas fa-tasks" style="color:var(--primary);"></i> Your Progress</h4>
+        <div style="display:flex;justify-content:space-between;margin-bottom:0.35rem;font-size:0.8rem;">
+          <span>Tasks completed</span>
+          <span id="progressPct" style="font-weight:700;color:var(--primary);">0%</span>
+        </div>
+        <div style="height:10px;background:var(--gray-200);border-radius:5px;overflow:hidden;">
+          <div id="progressBar" style="height:100%;background:linear-gradient(90deg,var(--primary),var(--secondary));border-radius:5px;width:0%;transition:width 0.5s;"></div>
+        </div>
+        <div id="progressCounts" style="font-size:0.75rem;color:var(--gray-500);margin-top:0.4rem;"></div>
+        <button class="btn btn-sm btn-outline" style="margin-top:0.75rem;width:100%;" onclick="exportTimeline()">
+          <i class="fas fa-download"></i> Export Timeline
+        </button>
+      </div>
+    </div>
+
+    <div class="tool-results-panel" id="tlResults" style="display:none;">
+      <div class="results-loading" id="tlLoading">
+        <div class="loading-spinner"></div>
+        <p style="font-weight:600;">Building your personalized timeline...</p>
+      </div>
+      <div id="tlContent" style="display:none;">
+        <!-- Header Summary -->
+        <div class="card timeline-summary" id="tlSummary" style="margin-bottom:1.25rem;"></div>
+
+        <!-- Gantt-style Phase View -->
+        <div class="card results-section" style="margin-bottom:1.25rem;">
+          <h3 class="results-section-title"><i class="fas fa-stream"></i> Application Phases Overview</h3>
+          <div id="ganttView"></div>
+        </div>
+
+        <!-- Critical Deadlines -->
+        <div class="card results-section" style="margin-bottom:1.25rem;">
+          <h3 class="results-section-title"><i class="fas fa-exclamation-triangle" style="color:var(--danger);"></i> Critical Deadlines — Don't Miss These!</h3>
+          <div id="criticalDeadlines"></div>
+        </div>
+
+        <!-- Interactive Month Timeline -->
+        <div class="card results-section">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem;">
+            <h3 class="results-section-title" style="margin-bottom:0;border-bottom:none;padding-bottom:0;"><i class="fas fa-list-alt"></i> Month-by-Month Roadmap</h3>
+            <div style="display:flex;gap:0.5rem;">
+              <button class="btn btn-sm btn-outline" onclick="toggleAll(true)">Expand All</button>
+              <button class="btn btn-sm btn-outline" onclick="toggleAll(false)">Collapse All</button>
+            </div>
+          </div>
+          <div id="timelineContainer" class="timeline-track"></div>
+        </div>
+
+        <!-- Key Advice -->
+        <div class="card recommendation-card" id="tlAdvice" style="margin-top:1.25rem;"></div>
+
+        <div class="next-steps-bar">
+          <a href="/admission-predictor" class="btn btn-sm btn-primary">Check Admission Chances <i class="fas fa-arrow-right"></i></a>
+          <a href="/loan-planner" class="btn btn-sm btn-outline">Plan Loan</a>
+          <a href="/chatbot" class="btn btn-sm btn-outline">Ask AI Mentor</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let completedTasks = new Set();
+let totalTasks = 0;
+let timelineData = null;
+
+document.getElementById('timelineForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('timelineBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="btn-spinner"></div> Generating...';
+
+  const panel = document.getElementById('tlResults');
+  panel.style.display = 'block';
+  document.getElementById('tlLoading').style.display = 'flex';
+  document.getElementById('tlContent').style.display = 'none';
+  panel.scrollIntoView({ behavior: 'smooth' });
+
+  const payload = {
+    intake: document.getElementById('tl_intake').value,
+    program: document.getElementById('tl_program').value,
+    country: document.getElementById('tl_country').value,
+    current_status: document.getElementById('tl_status').value,
+    num_apps: document.getElementById('tl_num_apps').value,
+    deadline_type: document.getElementById('tl_deadline').value,
+    has_gre: document.getElementById('tl_gre').checked,
+    has_toefl: document.getElementById('tl_toefl').checked,
+    sop_done: document.getElementById('tl_sop_done').checked,
+    lors_done: document.getElementById('tl_lors_done').checked
+  };
+
+  try {
+    const res = await fetch('/api/generate-timeline', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    const data = await res.json();
+    if (data.success) {
+      timelineData = data.data;
+      renderTimeline(data.data);
+      document.getElementById('tlLoading').style.display = 'none';
+      document.getElementById('tlContent').style.display = 'block';
+      document.getElementById('progressCard').style.display = 'block';
+      await awardXP('timeline_generator');
+      showToast('Timeline generated! +70 XP', 'success');
+    } else {
+      showToast('Error: ' + data.error, 'error');
+      panel.style.display = 'none';
+    }
+  } catch (err) {
+    showToast('Network error.', 'error');
+    panel.style.display = 'none';
+  }
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fas fa-calendar-check"></i> Generate My Timeline';
+});
+
+function renderTimeline(d) {
+  // Summary
+  const prob = d.success_probability || 80;
+  document.getElementById('tlSummary').innerHTML = `
+    <div style="display:flex;gap:2rem;flex-wrap:wrap;align-items:center;">
+      <div style="text-align:center;">
+        <div style="font-size:2.5rem;font-weight:900;color:var(--primary);">${d.total_months || 12}</div>
+        <div style="font-size:0.78rem;color:var(--gray-500);">MONTHS</div>
+      </div>
+      <div style="flex:1;min-width:200px;">
+        <div style="font-size:0.85rem;font-weight:600;color:var(--gray-600);margin-bottom:0.4rem;">Success Probability</div>
+        <div style="height:10px;background:var(--gray-200);border-radius:5px;overflow:hidden;">
+          <div style="height:100%;width:${prob}%;background:${prob>=70?'#22c55e':prob>=50?'#f59e0b':'#ef4444'};border-radius:5px;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--gray-400);margin-top:0.25rem;"><span>0%</span><span style="font-weight:700;color:${prob>=70?'#22c55e':prob>=50?'#f59e0b':'#ef4444'};">${prob}% on track</span><span>100%</span></div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:2.5rem;font-weight:900;color:var(--orange);">${(d.critical_deadlines||[]).length}</div>
+        <div style="font-size:0.78rem;color:var(--gray-500);">CRITICAL DATES</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:2.5rem;font-weight:900;color:var(--success);" id="totalTaskCount">—</div>
+        <div style="font-size:0.78rem;color:var(--gray-500);">TOTAL TASKS</div>
+      </div>
+    </div>`;
+
+  // Gantt-style phase bars
+  const phases = d.phases || [];
+  const colors = { Preparation: '#4f46e5', 'Test Prep': '#f97316', Research: '#0ea5e9', Application: '#22c55e', Visa: '#9333ea', Enrollment: '#0d9488' };
+  document.getElementById('ganttView').innerHTML = `<div class="gantt-bars">${phases.map(ph => `
+    <div class="gantt-row">
+      <div class="gantt-label">${ph.name}</div>
+      <div class="gantt-bar-wrap"><div class="gantt-bar" style="background:${colors[ph.name]||'#4f46e5'}">${ph.months||''}</div></div>
+    </div>`).join('')}</div>`;
+
+  // Critical Deadlines
+  document.getElementById('criticalDeadlines').innerHTML = (d.critical_deadlines || []).map(cd => `
+    <div class="deadline-item">
+      <div class="deadline-date"><i class="fas fa-clock"></i> ${cd.date}</div>
+      <div class="deadline-info">
+        <strong>${cd.deadline}</strong>
+        <p>${cd.consequence}</p>
+      </div>
+    </div>`).join('');
+
+  // Interactive Timeline
+  let taskId = 0;
+  totalTasks = 0;
+  const tlEl = document.getElementById('timelineContainer');
+  tlEl.innerHTML = (d.timeline || []).map((month, mi) => {
+    totalTasks += (month.tasks || []).length;
+    const monthId = 'month-' + mi;
+    return `<div class="timeline-month" id="${monthId}">
+      <div class="tl-month-header" onclick="toggleMonth('${monthId}')">
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+          <div class="tl-month-label">${month.month}</div>
+          <div class="tl-phase-badge">${month.phase}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+          ${month.milestone ? `<span style="font-size:0.75rem;color:var(--orange);font-weight:600;"><i class="fas fa-flag"></i> ${month.milestone}</span>` : ''}
+          <i class="fas fa-chevron-down tl-toggle-icon" id="icon-${monthId}"></i>
+        </div>
+      </div>
+      <div class="tl-tasks-wrapper" id="tasks-${monthId}">
+        <div class="tl-tasks">${(month.tasks || []).map(t => {
+          const tid = 'task-' + (taskId++);
+          return `<div class="tl-task priority-${(t.priority||'').toLowerCase()}" id="${tid}">
+            <div class="task-header">
+              <label class="task-check-label">
+                <input type="checkbox" class="task-checkbox" onchange="toggleTask('${tid}', this)">
+                <span class="task-name">${t.task}</span>
+              </label>
+              <span class="task-priority priority-badge-${(t.priority||'medium').toLowerCase()}">${t.priority}</span>
+            </div>
+            <div class="task-meta"><i class="fas fa-clock"></i> ${t.duration} ${t.tips ? `<span class="task-tip-inline"> · <i class="fas fa-lightbulb"></i> ${t.tips}</span>` : ''}</div>
+          </div>`;
+        }).join('')}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('totalTaskCount').textContent = totalTasks;
+  updateProgress();
+
+  document.getElementById('tlAdvice').innerHTML = `<div class="rec-header"><i class="fas fa-lightbulb"></i> Personalized Strategy</div><p>${d.key_advice || ''}</p>`;
+}
+
+function toggleMonth(id) {
+  const wrapper = document.getElementById('tasks-' + id);
+  const icon = document.getElementById('icon-' + id);
+  const isOpen = wrapper.style.display !== 'none';
+  wrapper.style.display = isOpen ? 'none' : 'block';
+  icon.style.transform = isOpen ? 'rotate(-90deg)' : '';
+}
+
+function toggleAll(open) {
+  document.querySelectorAll('.tl-tasks-wrapper').forEach(w => w.style.display = open ? 'block' : 'none');
+  document.querySelectorAll('.tl-toggle-icon').forEach(i => i.style.transform = open ? '' : 'rotate(-90deg)');
+}
+
+function toggleTask(tid, cb) {
+  const el = document.getElementById(tid);
+  if (cb.checked) { completedTasks.add(tid); el.classList.add('task-done'); }
+  else { completedTasks.delete(tid); el.classList.remove('task-done'); }
+  updateProgress();
+}
+
+function updateProgress() {
+  const pct = totalTasks > 0 ? Math.round(completedTasks.size / totalTasks * 100) : 0;
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressPct').textContent = pct + '%';
+  document.getElementById('progressCounts').textContent = `${completedTasks.size} of ${totalTasks} tasks done`;
+}
+
+function exportTimeline() {
+  if (!timelineData) return;
+  let txt = `EduBridge Application Timeline\nGenerated: ${new Date().toLocaleDateString()}\n\n`;
+  (timelineData.timeline || []).forEach(m => {
+    txt += `\n=== ${m.month} (${m.phase}) ===\n`;
+    (m.tasks || []).forEach(t => txt += `  [${completedTasks.has('task-'+completedTasks.size)?'X':' '}] ${t.task} (${t.priority}, ${t.duration})\n`);
+    if (m.milestone) txt += `  🏁 MILESTONE: ${m.milestone}\n`;
+  });
+  const blob = new Blob([txt], { type: 'text/plain' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'application_timeline.txt'; a.click();
+  showToast('Timeline exported!', 'success');
+}
+</script>
+{% endblock %}

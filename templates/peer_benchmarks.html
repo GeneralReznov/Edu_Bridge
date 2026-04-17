@@ -1,0 +1,354 @@
+{% extends "base.html" %}
+{% block title %}Peer Benchmarking – EduBridge AI{% endblock %}
+{% block head %}
+<style>
+.pb-hero{background:linear-gradient(135deg,#0c1445 0%,#0f4c81 50%,#0891b2 100%);color:#fff;padding:56px 0 40px;text-align:center;}
+.pb-hero h1{font-size:2.2rem;font-weight:800;margin-bottom:8px;}
+.pb-badge{display:inline-block;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:4px 14px;font-size:.8rem;font-weight:600;margin-bottom:16px;}
+.pb-main{max-width:1160px;margin:0 auto;padding:32px 16px;}
+.pb-layout{display:grid;grid-template-columns:340px 1fr;gap:24px;align-items:start;}
+
+/* Form */
+.pb-form{background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.08);padding:28px;position:sticky;top:80px;}
+.pb-form h3{font-size:1.1rem;font-weight:700;color:#0c1445;margin:0 0 4px;}
+.pb-form p{font-size:.85rem;color:#64748b;margin-bottom:20px;}
+.fl{font-size:.78rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin:14px 0 6px;}
+.pb-form select,.pb-form input{width:100%;box-sizing:border-box;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.88rem;font-family:inherit;}
+.pb-form select:focus,.pb-form input:focus{outline:none;border-color:#0891b2;}
+.bench-btn{width:100%;padding:13px;background:linear-gradient(135deg,#0891b2,#0f4c81);color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;margin-top:16px;transition:.2s;}
+.bench-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(8,145,178,.4);}
+.bench-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+.cohort-note{background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:12px;font-size:.82rem;color:#0369a1;margin-top:12px;}
+
+/* Results */
+.pb-results{display:none;}
+.pb-results.visible{display:block;}
+.sec-title{font-size:1.2rem;font-weight:700;color:#0c1445;margin:0 0 16px;display:flex;align-items:center;gap:8px;}
+
+/* Overall Rank Banner */
+.rank-banner{background:linear-gradient(135deg,#0c1445,#0f4c81,#0891b2);border-radius:20px;padding:32px;color:#fff;margin-bottom:24px;text-align:center;position:relative;overflow:hidden;}
+.rank-banner::before{content:'';position:absolute;top:-40px;right:-40px;width:150px;height:150px;background:rgba(255,255,255,.05);border-radius:50%;}
+.rank-pct{font-size:4rem;font-weight:900;line-height:1;}
+.rank-pct span{font-size:1.5rem;font-weight:500;opacity:.8;}
+.rank-sub{font-size:1rem;opacity:.9;margin:8px 0;}
+.rank-emoji{font-size:2rem;margin-bottom:8px;}
+.rank-tier{display:inline-block;background:rgba(255,255,255,.2);border-radius:20px;padding:4px 16px;font-size:.9rem;font-weight:700;margin-top:8px;}
+.rank-cohort{font-size:.82rem;opacity:.7;margin-top:8px;}
+
+/* Dimension Benchmarks */
+.dim-grid{display:grid;gap:16px;margin-bottom:24px;}
+.dim-card{background:#fff;border-radius:14px;box-shadow:0 3px 16px rgba(0,0,0,.07);padding:20px;}
+.dim-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.dim-name{font-size:.95rem;font-weight:700;color:#0c1445;}
+.dim-rank-badge{padding:4px 12px;border-radius:20px;font-size:.8rem;font-weight:700;}
+.dim-bar-section{margin-bottom:10px;}
+.dim-bar-label{display:flex;justify-content:space-between;font-size:.8rem;color:#64748b;margin-bottom:4px;}
+.dim-bar-bg{background:#f1f5f9;border-radius:10px;height:14px;overflow:hidden;position:relative;}
+.dim-bar-you{height:100%;border-radius:10px;background:linear-gradient(90deg,#0891b2,#0f4c81);transition:width .8s ease;position:absolute;top:0;left:0;}
+.dim-bar-avg{position:absolute;top:0;height:100%;width:2px;background:#f97316;z-index:2;}
+.dim-bar-avg-label{font-size:.7rem;color:#f97316;font-weight:600;}
+.dim-compare{display:flex;gap:16px;margin-top:10px;font-size:.82rem;}
+.dim-cmp-item{display:flex;align-items:center;gap:6px;}
+.dim-cmp-dot{width:10px;height:10px;border-radius:50%;}
+
+/* Placement probability */
+.prob-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:24px;}
+.prob-card{background:#fff;border-radius:14px;box-shadow:0 3px 16px rgba(0,0,0,.07);padding:20px;text-align:center;}
+.prob-card .pc-pct{font-size:2rem;font-weight:800;}
+.prob-card .pc-label{font-size:.8rem;color:#64748b;margin-top:4px;}
+.prob-card .pc-bar{height:6px;border-radius:10px;margin-top:10px;overflow:hidden;}
+.prob-card .pc-bar-fill{height:100%;border-radius:10px;}
+
+/* Similar admits */
+.admits-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:24px;}
+.admit-chip{background:#f0f9ff;border:1.5px solid #bae6fd;border-radius:10px;padding:12px;text-align:center;font-size:.82rem;font-weight:700;color:#0369a1;}
+.admit-chip i{display:block;font-size:1.3rem;margin-bottom:4px;color:#0891b2;}
+
+/* AI Insights */
+.insight-card{background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.08);padding:24px;margin-bottom:20px;}
+.insight-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid #f1f5f9;}
+.insight-item:last-child{border-bottom:none;}
+.insight-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+.insight-body h5{font-size:.88rem;font-weight:700;color:#0c1445;margin:0 0 3px;}
+.insight-body p{font-size:.82rem;color:#374151;margin:0;}
+
+/* Actions */
+.action-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:24px;}
+.action-card{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.07);padding:16px;cursor:pointer;border:1.5px solid #e2e8f0;transition:.2s;text-decoration:none;color:inherit;}
+.action-card:hover{border-color:#0891b2;transform:translateY(-2px);}
+.action-card i{color:#0891b2;font-size:1.3rem;margin-bottom:8px;}
+.action-card h5{font-size:.88rem;font-weight:700;color:#0c1445;margin:0 0 3px;}
+.action-card p{font-size:.78rem;color:#64748b;margin:0;}
+
+/* Loading */
+.pb-loading{display:none;text-align:center;padding:60px 20px;}
+.pb-loading.visible{display:block;}
+.spin-ring{width:56px;height:56px;border:4px solid #e2e8f0;border-top:4px solid #0891b2;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.pb-error{display:none;background:#fff1f2;border:1px solid #fecdd3;border-radius:12px;padding:16px;color:#dc2626;margin-bottom:16px;}
+.pb-error.visible{display:block;}
+
+@media(max-width:900px){.pb-layout{grid-template-columns:1fr;}.pb-form{position:static;}}
+</style>
+{% endblock %}
+{% block content %}
+<div class="pb-hero">
+  <div class="pb-badge"><i class="fas fa-users"></i> 1,247 Indian Student Cohort</div>
+  <h1><i class="fas fa-chart-bar"></i> Peer Benchmarking</h1>
+  <p>See exactly where you stand among Indian students applying abroad — by GPA, GRE, experience & more</p>
+</div>
+
+<div class="pb-main">
+  <div class="pb-layout">
+    <!-- Form -->
+    <div class="pb-form">
+      <h3>Your Academic Profile</h3>
+      <p>Enter your stats to compare against 1,247 Indian applicants in our cohort</p>
+
+      <div class="fl">Field of Study</div>
+      <select id="pbField">
+        <option>Computer Science / IT</option><option>Data Science / AI / ML</option>
+        <option>Electrical Engineering</option><option>Mechanical Engineering</option>
+        <option>Business Administration (MBA)</option><option>Finance / Economics</option>
+        <option>Biotechnology / Life Sciences</option>
+      </select>
+
+      <div class="fl">GPA / CGPA</div>
+      <input id="pbGpa" type="text" placeholder="e.g. 8.7/10 or 3.6/4.0">
+
+      <div class="fl">GRE Verbal</div>
+      <input id="pbGreV" type="number" placeholder="e.g. 160 (130-170 scale)">
+
+      <div class="fl">GRE Quantitative</div>
+      <input id="pbGreQ" type="number" placeholder="e.g. 165 (130-170 scale)">
+
+      <div class="fl">TOEFL Score</div>
+      <input id="pbToefl" type="number" placeholder="e.g. 105 (0-120 scale) — leave blank if not taken">
+
+      <div class="fl">Work Experience (years)</div>
+      <input id="pbWork" type="number" placeholder="e.g. 2" min="0" max="20">
+
+      <div class="fl">Research Experience</div>
+      <select id="pbResearch">
+        <option value="none">None</option><option value="minor">Minor (course projects)</option>
+        <option value="moderate">Moderate (lab / research assistant)</option>
+        <option value="strong">Strong (publications / thesis)</option>
+      </select>
+
+      <div class="fl">Target Country</div>
+      <select id="pbCountry">
+        <option>USA</option><option>Canada</option><option>UK</option>
+        <option>Germany</option><option>Australia</option><option>Singapore</option>
+      </select>
+
+      <div class="cohort-note">
+        <i class="fas fa-info-circle"></i>
+        Cohort of <strong>1,247 Indian students</strong> who applied to graduate programs abroad in 2022–2024. Data is anonymized and aggregated.
+      </div>
+
+      <button class="bench-btn" id="benchBtn" onclick="runBenchmark()">
+        <i class="fas fa-chart-bar"></i> Benchmark My Profile
+      </button>
+    </div>
+
+    <!-- Results -->
+    <div>
+      <div class="pb-loading" id="pbLoading">
+        <div class="spin-ring"></div>
+        <h3 style="color:#0891b2;font-weight:700;">Comparing your profile…</h3>
+        <p style="color:#64748b;">Running statistical analysis against 1,247 Indian student profiles</p>
+      </div>
+      <div class="pb-error" id="pbError"></div>
+
+      <div class="pb-results" id="pbResults">
+
+        <!-- Overall Rank -->
+        <div class="rank-banner" id="rankBanner"></div>
+
+        <!-- Dimension Benchmarks -->
+        <div class="sec-title"><i class="fas fa-layer-group" style="color:#0891b2;"></i> Dimension-by-Dimension Breakdown</div>
+        <div class="dim-grid" id="dimGrid"></div>
+
+        <!-- Acceptance Probability -->
+        <div class="sec-title"><i class="fas fa-percentage" style="color:#7c3aed;"></i> Estimated Acceptance Probability</div>
+        <div class="prob-grid" id="probGrid"></div>
+
+        <!-- Similar admits -->
+        <div class="sec-title"><i class="fas fa-graduation-cap" style="color:#16a34a;"></i> Students Like You Got Into…</div>
+        <div class="admits-grid" id="admitsGrid"></div>
+
+        <!-- AI Insights -->
+        <div class="sec-title"><i class="fas fa-brain" style="color:#7c3aed;"></i> AI-Powered Insights</div>
+        <div class="insight-card" id="insightCard"></div>
+
+        <!-- Next Actions -->
+        <div class="sec-title"><i class="fas fa-arrow-right" style="color:#f97316;"></i> Recommended Next Actions</div>
+        <div class="action-grid" id="actionGrid"></div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/peer-comparison-charts.js') }}"></script>
+<script>
+async function runBenchmark(){
+  const gpa = document.getElementById('pbGpa').value;
+  if(!gpa){ alert('Please enter your GPA/CGPA'); return; }
+
+  document.getElementById('pbLoading').classList.add('visible');
+  document.getElementById('pbResults').classList.remove('visible');
+  document.getElementById('pbError').classList.remove('visible');
+  document.getElementById('benchBtn').disabled = true;
+
+  try {
+    const res = await fetch('/api/peer-benchmark', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        field: document.getElementById('pbField').value,
+        gpa: gpa,
+        gre_verbal: document.getElementById('pbGreV').value,
+        gre_quant: document.getElementById('pbGreQ').value,
+        toefl: document.getElementById('pbToefl').value,
+        work_exp: document.getElementById('pbWork').value,
+        research: document.getElementById('pbResearch').value,
+        country: document.getElementById('pbCountry').value,
+      })
+    });
+    const json = await res.json();
+    if(!json.success) throw new Error(json.error);
+    renderBenchmark(json.data);
+    document.getElementById('pbResults').classList.add('visible');
+    if(window.awardXP) awardXP('peer_benchmarks', json.xp_gained || 75);
+  } catch(e){
+    document.getElementById('pbError').textContent = '⚠️ ' + e.message;
+    document.getElementById('pbError').classList.add('visible');
+  } finally {
+    document.getElementById('pbLoading').classList.remove('visible');
+    document.getElementById('benchBtn').disabled = false;
+  }
+}
+
+function renderBenchmark(d){
+  renderRankBanner(d);
+  renderDimensions(d.dimensions);
+  renderProbabilities(d.ai_insights);
+  renderAdmits(d.similar_admits);
+  renderInsights(d);
+  renderActions(d);
+}
+
+function renderRankBanner(d){
+  const r = d.overall_rank;
+  document.getElementById('rankBanner').innerHTML = `
+    <div class="rank-emoji">${r.emoji}</div>
+    <div class="rank-pct">${d.overall_percentile}<span>th</span></div>
+    <div class="rank-sub">Percentile among Indian ${d.field} applicants</div>
+    <div class="rank-tier">${r.label}</div>
+    <div class="rank-cohort">Out of ${(d.cohort_size||1247).toLocaleString()} students · ${d.success_rate}% of similar students got into target schools</div>`;
+}
+
+function renderDimensions(dims){
+  const COLORS = {'Top 10%':'#7c3aed','Top 25%':'#0891b2','Above Average':'#16a34a','Below Average':'#d97706','Bottom 25%':'#dc2626'};
+  document.getElementById('dimGrid').innerHTML = (dims||[]).map(d=>{
+    const color = COLORS[d.rank?.label] || '#0891b2';
+    const avg_pct = 50;
+    return `
+    <div class="dim-card">
+      <div class="dim-header">
+        <div class="dim-name">${d.name}</div>
+        <span class="dim-rank-badge" style="background:${color}20;color:${color};">${d.rank?.emoji||''} ${d.rank?.label||''}</span>
+      </div>
+      <div class="dim-bar-section">
+        <div class="dim-bar-label">
+          <span>Your score: <strong>${d.user_val}</strong></span>
+          <span>Cohort avg: <strong>${d.cohort_avg}</strong></span>
+        </div>
+        <div class="dim-bar-bg">
+          <div class="dim-bar-you" style="width:${d.user_pct}%;background:${color};"></div>
+          <div class="dim-bar-avg" style="left:${avg_pct}%;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:.72rem;color:#64748b;">
+          <span>0%</span>
+          <span style="color:#f97316;font-weight:600;">↑ Cohort Avg (50th)</span>
+          <span>100%</span>
+        </div>
+      </div>
+      <div class="dim-compare">
+        <div class="dim-cmp-item"><div class="dim-cmp-dot" style="background:${color};"></div><span>You: ${d.user_pct}th percentile</span></div>
+        <div class="dim-cmp-item"><div class="dim-cmp-dot" style="background:#f97316;"></div><span>Avg: 50th percentile</span></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderProbabilities(ai){
+  const probs = ai?.acceptance_probability || {top_10:10, top_25:30, top_50:65, top_100:85};
+  const tiers = [
+    {label:'Top 10 Programs', key:'top_10', color:'#dc2626'},
+    {label:'Top 25 Programs', key:'top_25', color:'#d97706'},
+    {label:'Top 50 Programs', key:'top_50', color:'#0891b2'},
+    {label:'Top 100 Programs', key:'top_100', color:'#16a34a'},
+  ];
+  document.getElementById('probGrid').innerHTML = tiers.map(t=>`
+    <div class="prob-card">
+      <div class="pc-pct" style="color:${t.color};">${probs[t.key]||0}%</div>
+      <div class="pc-label">${t.label}</div>
+      <div class="pc-bar"><div class="pc-bar-fill" style="width:${probs[t.key]||0}%;background:${t.color};"></div></div>
+    </div>`).join('');
+}
+
+function renderAdmits(unis){
+  document.getElementById('admitsGrid').innerHTML = (unis||[]).map(u=>`
+    <div class="admit-chip">
+      <i class="fas fa-university"></i>
+      ${u}
+    </div>`).join('');
+}
+
+function renderInsights(d){
+  const ai = d.ai_insights;
+  const strength = d.insight?.strength || '';
+  const improvement = d.insight?.improvement || '';
+  const outlook = d.insight?.outlook || '';
+  const aiInsights = ai?.key_insights || [];
+  const summary = ai?.competitive_summary || '';
+  const actions = ai?.immediate_actions || [];
+
+  const allInsights = [
+    {icon:'fas fa-star', color:'#d97706', bg:'#fffbeb', title:'Your Strength', desc: strength},
+    {icon:'fas fa-arrow-up', color:'#0891b2', bg:'#f0f9ff', title:'Growth Opportunity', desc: improvement},
+    {icon:'fas fa-eye', color:'#7c3aed', bg:'#faf5ff', title:'Competitive Outlook', desc: outlook},
+    ...aiInsights.slice(0,3).map(ins=>({icon:'fas fa-brain', color:'#16a34a', bg:'#f0fdf4', title:'AI Insight', desc: ins})),
+  ].filter(i=>i.desc);
+
+  const html = allInsights.map(ins=>`
+    <div class="insight-item">
+      <div class="insight-icon" style="background:${ins.bg};color:${ins.color};"><i class="${ins.icon}"></i></div>
+      <div class="insight-body">
+        <h5>${ins.title}</h5>
+        <p>${ins.desc}</p>
+      </div>
+    </div>`).join('');
+
+  const summaryHtml = summary ? `<div style="background:#f0f9ff;border-radius:10px;padding:14px;margin-bottom:12px;font-size:.88rem;color:#0369a1;">${summary}</div>` : '';
+
+  document.getElementById('insightCard').innerHTML = summaryHtml + html;
+}
+
+function renderActions(d){
+  const actions = [
+    {icon:'fas fa-chess', url:'/application-strategy', title:'Build Strategy', desc:'Get a personalized application strategy based on your benchmarking'},
+    {icon:'fas fa-brain', url:'/admission-predictor', title:'Predict Admission', desc:'Check your actual admission probability at specific universities'},
+    {icon:'fas fa-piggy-bank', url:'/loan-planner', title:'Plan Financing', desc:'Get personalized loan offers based on your profile'},
+    {icon:'fas fa-robot', url:'/chatbot', title:'Ask EduMentor', desc:'Get specific advice on improving your weakest areas'},
+  ];
+  document.getElementById('actionGrid').innerHTML = actions.map(a=>`
+    <a class="action-card" href="${a.url}">
+      <i class="${a.icon}"></i>
+      <h5>${a.title}</h5>
+      <p>${a.desc}</p>
+    </a>`).join('');
+}
+</script>
+{% endblock %}

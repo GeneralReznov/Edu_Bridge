@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}EduBridge – Your Study Abroad Copilot{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+<!-- ── Navigation ─────────────────────────────────────────────────────────── -->
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <a href="/" class="nav-brand">
+      <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
+      <span class="brand-name">EduBridge</span>
+      <span class="brand-tag">AI</span>
+    </a>
+
+    <div class="nav-links" id="navLinks">
+      <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">Home</a>
+
+      <!-- Tools Dropdown -->
+      <div class="nav-dropdown">
+        <button class="nav-link nav-dropdown-btn {% if request.path in ['/career-navigator','/roi-calculator','/admission-predictor','/timeline-generator','/university-data','/interview-prep'] %}active{% endif %}">
+          <i class="fas fa-tools"></i> Tools <i class="fas fa-chevron-down" style="font-size:.65rem;margin-left:2px;"></i>
+        </button>
+        <div class="nav-dropdown-menu">
+          <a href="/career-navigator" class="nav-dd-item"><i class="fas fa-compass" style="color:#4f46e5;"></i><div><strong>Career Navigator</strong><span>AI-driven country & uni recs</span></div></a>
+          <a href="/roi-calculator" class="nav-dd-item"><i class="fas fa-chart-line" style="color:#16a34a;"></i><div><strong>ROI Calculator</strong><span>20-year wealth projection</span></div></a>
+          <a href="/admission-predictor" class="nav-dd-item"><i class="fas fa-brain" style="color:#7c3aed;"></i><div><strong>Admission Predictor</strong><span>Check your admission chances</span></div></a>
+          <a href="/timeline-generator" class="nav-dd-item"><i class="fas fa-calendar-alt" style="color:#0891b2;"></i><div><strong>Timeline Generator</strong><span>Month-by-month roadmap</span></div></a>
+          <a href="/university-data" class="nav-dd-item"><i class="fas fa-database" style="color:#1d4ed8;"></i><div><strong>University Database</strong><span>Search & bookmark 30+ universities</span></div></a>
+          <a href="/interview-prep" class="nav-dd-item"><i class="fas fa-microphone-alt" style="color:#dc2626;"></i><div><strong>Interview Prep</strong><span>AI-evaluated mock interviews</span></div></a>
+        </div>
+      </div>
+
+      <!-- Advanced Dropdown -->
+      <div class="nav-dropdown">
+        <button class="nav-link nav-dropdown-btn {% if request.path in ['/university-comparison','/application-strategy','/peer-benchmarks','/analytics','/learning-path','/document-vault'] %}active{% endif %}">
+          <i class="fas fa-star"></i> Advanced <i class="fas fa-chevron-down" style="font-size:.65rem;margin-left:2px;"></i>
+        </button>
+        <div class="nav-dropdown-menu">
+          <a href="/university-comparison" class="nav-dd-item"><i class="fas fa-balance-scale" style="color:#d97706;"></i><div><strong>University Comparison</strong><span>Deep AI-powered comparison</span></div></a>
+          <a href="/application-strategy" class="nav-dd-item"><i class="fas fa-chess" style="color:#7c3aed;"></i><div><strong>App Strategy Recommender</strong><span>SOP, LOR & timeline blueprint</span></div></a>
+          <a href="/peer-benchmarks" class="nav-dd-item"><i class="fas fa-users" style="color:#0891b2;"></i><div><strong>Peer Benchmarking</strong><span>Compare vs 1,247 Indian students</span></div></a>
+          <a href="/analytics" class="nav-dd-item"><i class="fas fa-chart-pie" style="color:#16a34a;"></i><div><strong>Analytics Dashboard</strong><span>Track your full journey</span></div></a>
+          <a href="/learning-path" class="nav-dd-item"><i class="fas fa-road" style="color:#f97316;"></i><div><strong>Adaptive Learning Path</strong><span>Personalized study roadmap</span></div></a>
+          <a href="/document-vault" class="nav-dd-item"><i class="fas fa-folder-open" style="color:#78716c;"></i><div><strong>Document Vault</strong><span>Manage your SOP, LOR & docs</span></div></a>
+        </div>
+      </div>
+
+      <!-- Community Dropdown -->
+      <div class="nav-dropdown">
+        <button class="nav-link nav-dropdown-btn {% if request.path in ['/community','/admission-tracker','/referral','/feedback'] %}active{% endif %}">
+          <i class="fas fa-users"></i> Community <i class="fas fa-chevron-down" style="font-size:.65rem;margin-left:2px;"></i>
+        </button>
+        <div class="nav-dropdown-menu">
+          <a href="/community" class="nav-dd-item"><i class="fas fa-comments" style="color:#4f46e5;"></i><div><strong>Community Forum</strong><span>Ask questions, share advice</span></div></a>
+          <a href="/admission-tracker" class="nav-dd-item"><i class="fas fa-tasks" style="color:#16a34a;"></i><div><strong>Admission Tracker</strong><span>Manage all your applications</span></div></a>
+          <a href="/referral" class="nav-dd-item"><i class="fas fa-gift" style="color:#d97706;"></i><div><strong>Referral Program</strong><span>Earn XP for inviting friends</span></div></a>
+          <a href="/feedback" class="nav-dd-item"><i class="fas fa-comment-dots" style="color:#0891b2;"></i><div><strong>Give Feedback</strong><span>Help us improve EduBridge</span></div></a>
+        </div>
+      </div>
+
+      <a href="/loan-planner" class="nav-link {% if request.path == '/loan-planner' %}active{% endif %}">
+        <i class="fas fa-piggy-bank"></i> Loans
+      </a>
+      <a href="/chatbot" class="nav-link cta-nav {% if request.path == '/chatbot' %}active{% endif %}">
+        <i class="fas fa-robot"></i> AI Mentor
+      </a>
+      <a href="/gamification" class="nav-link {% if request.path == '/gamification' %}active{% endif %}">
+        <i class="fas fa-trophy"></i> Progress
+      </a>
+    </div>
+
+    <div class="nav-right">
+      <a href="/gamification" class="xp-pill" id="navXP" style="text-decoration:none;" title="My Progress Dashboard">
+        <i class="fas fa-bolt"></i> <span id="navXpVal">0</span> XP
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Page Content ───────────────────────────────────────────────────────── -->
+<main class="main-content">
+  {% block content %}{% endblock %}
+</main>
+
+<!-- ── Footer ─────────────────────────────────────────────────────────────── -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="brand-icon small"><i class="fas fa-graduation-cap"></i></div>
+      <span>EduBridge AI</span>
+    </div>
+    <p class="footer-tagline">Empowering Indian students to make confident study abroad decisions</p>
+    <div class="footer-links">
+      <a href="/career-navigator">Career Navigator</a>
+      <a href="/roi-calculator">ROI Calculator</a>
+      <a href="/admission-predictor">Admission Predictor</a>
+      <a href="/loan-planner">Loan Planner</a>
+      <a href="/chatbot">AI Mentor</a>
+    </div>
+    <p class="footer-copy">&copy; 2025 EduBridge AI. Powered by Gemini AI.</p>
+  </div>
+</footer>
+
+<!-- ── Toast Notification ────────────────────────────────────────────────── -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ── XP Gain Popup ─────────────────────────────────────────────────────── -->
+<div class="xp-popup" id="xpPopup">
+  <i class="fas fa-bolt"></i>
+  <span id="xpPopupVal">+100 XP</span>
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

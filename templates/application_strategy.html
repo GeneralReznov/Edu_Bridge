@@ -1,0 +1,426 @@
+{% extends "base.html" %}
+{% block title %}Application Strategy Recommender – EduBridge AI{% endblock %}
+{% block head %}
+<style>
+.as-hero{background:linear-gradient(135deg,#1a0533 0%,#4a1d96 50%,#7c3aed 100%);color:#fff;padding:56px 0 40px;text-align:center;}
+.as-hero h1{font-size:2.2rem;font-weight:800;margin-bottom:8px;}
+.as-badge{display:inline-block;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:4px 14px;font-size:.8rem;font-weight:600;margin-bottom:16px;}
+.as-main{max-width:1200px;margin:0 auto;padding:32px 16px;}
+.as-layout{display:grid;grid-template-columns:360px 1fr;gap:24px;align-items:start;}
+
+/* Form */
+.as-form-card{background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.08);padding:28px;position:sticky;top:80px;}
+.as-form-card h3{font-size:1.1rem;font-weight:700;color:#1a0533;margin:0 0 4px;}
+.as-form-card p{font-size:.85rem;color:#64748b;margin-bottom:20px;}
+.fl{font-size:.78rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin:16px 0 6px;}
+.as-form-card select,.as-form-card input,.as-form-card textarea{width:100%;box-sizing:border-box;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.88rem;font-family:inherit;color:#1e293b;}
+.as-form-card select:focus,.as-form-card input:focus,.as-form-card textarea:focus{outline:none;border-color:#7c3aed;}
+.as-form-card textarea{resize:vertical;min-height:70px;}
+.country-checks{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px;}
+.ctry-chip{display:flex;align-items:center;gap:4px;background:#f5f3ff;border:1.5px solid #ddd6fe;border-radius:20px;padding:4px 10px;font-size:.8rem;font-weight:600;cursor:pointer;user-select:none;transition:.2s;}
+.ctry-chip input[type=checkbox]{display:none;}
+.ctry-chip.checked{background:#7c3aed;color:#fff;border-color:#7c3aed;}
+.gen-btn{width:100%;padding:13px;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;margin-top:16px;transition:.2s;}
+.gen-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(124,58,237,.4);}
+.gen-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+
+/* Results */
+.as-results{display:none;}
+.as-results.visible{display:block;}
+.sec-title{font-size:1.2rem;font-weight:700;color:#1a0533;margin:28px 0 14px;display:flex;align-items:center;gap:8px;}
+
+/* Profile Assessment */
+.profile-assess{background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.08);padding:24px;margin-bottom:20px;display:grid;grid-template-columns:140px 1fr;gap:20px;align-items:center;}
+.score-circle{width:120px;height:120px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:conic-gradient(#7c3aed calc(var(--pct)*1%),#f1f5f9 0);position:relative;}
+.score-circle::before{content:'';position:absolute;inset:12px;border-radius:50%;background:#fff;}
+.score-circle .sc-num{position:relative;font-size:1.8rem;font-weight:800;color:#7c3aed;z-index:1;}
+.score-circle .sc-label{position:relative;font-size:.65rem;font-weight:700;color:#64748b;z-index:1;}
+.assess-info h4{font-size:1rem;font-weight:700;color:#1a0533;margin:0 0 6px;}
+.assess-info p{font-size:.88rem;color:#374151;margin:0 0 10px;}
+.gap-chip{display:inline-block;background:#fff1f2;color:#dc2626;font-size:.75rem;padding:2px 8px;border-radius:6px;margin:2px;font-weight:600;}
+
+/* University Portfolio */
+.portfolio-tabs{display:flex;gap:8px;margin-bottom:16px;}
+.p-tab{padding:7px 16px;border-radius:8px;border:1.5px solid #e2e8f0;background:#fff;font-weight:700;font-size:.85rem;cursor:pointer;transition:.2s;}
+.p-tab.reach.active,.p-tab.reach:hover{background:#fee2e2;border-color:#fca5a5;color:#dc2626;}
+.p-tab.target.active,.p-tab.target:hover{background:#fffbeb;border-color:#fcd34d;color:#d97706;}
+.p-tab.safe.active,.p-tab.safe:hover{background:#f0fdf4;border-color:#86efac;color:#16a34a;}
+.port-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+.port-card{background:#fff;border-radius:14px;box-shadow:0 3px 16px rgba(0,0,0,.07);padding:18px;border-top:4px solid #7c3aed;transition:.2s;}
+.port-card.reach{border-top-color:#dc2626;}
+.port-card.target{border-top-color:#d97706;}
+.port-card.safe{border-top-color:#16a34a;}
+.port-card:hover{transform:translateY(-2px);}
+.port-card h4{font-size:.95rem;font-weight:800;color:#1a0533;margin:0 0 4px;}
+.port-card .pc-meta{font-size:.78rem;color:#64748b;margin-bottom:10px;}
+.prob-bar-bg{background:#f1f5f9;border-radius:10px;height:8px;overflow:hidden;margin-bottom:6px;}
+.prob-bar-fill{height:100%;border-radius:10px;}
+.reach .prob-bar-fill{background:#dc2626;}
+.target .prob-bar-fill{background:#d97706;}
+.safe .prob-bar-fill{background:#16a34a;}
+.pc-stat{font-size:.8rem;color:#374151;display:flex;justify-content:space-between;margin-bottom:3px;}
+.pc-tip{background:#f8fafc;border-radius:8px;padding:8px;font-size:.75rem;color:#4f46e5;margin-top:10px;font-style:italic;}
+
+/* SOP Strategy */
+.sop-card{background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.08);padding:24px;margin-bottom:20px;}
+.sop-narrative{background:linear-gradient(135deg,#faf5ff,#f0f0ff);border:1.5px solid #c4b5fd;border-radius:12px;padding:16px;margin-bottom:16px;}
+.sop-narrative h4{font-size:.9rem;font-weight:700;color:#7c3aed;margin:0 0 6px;}
+.sop-narrative p{font-size:.88rem;color:#374151;margin:0;}
+.sop-structure{list-style:none;padding:0;margin:0;}
+.sop-structure li{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid #f1f5f9;}
+.sop-structure li:last-child{border-bottom:none;}
+.sop-step-num{width:28px;height:28px;border-radius:50%;background:#7c3aed;color:#fff;font-size:.8rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sop-step-info h5{font-size:.88rem;font-weight:700;color:#1a0533;margin:0 0 2px;}
+.sop-step-info p{font-size:.8rem;color:#64748b;margin:0;}
+.sop-step-wc{font-size:.75rem;color:#7c3aed;font-weight:600;}
+.theme-chip{display:inline-block;background:#f5f3ff;color:#7c3aed;padding:4px 10px;border-radius:20px;font-size:.78rem;font-weight:600;margin:2px;}
+
+/* LOR Strategy */
+.lor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:20px;}
+.lor-card{background:#fff;border-radius:14px;box-shadow:0 3px 16px rgba(0,0,0,.07);padding:18px;}
+.lor-card h4{font-size:.9rem;font-weight:700;color:#1a0533;margin:0 0 4px;}
+.lor-priority{display:inline-block;padding:2px 8px;border-radius:6px;font-size:.72rem;font-weight:700;margin-bottom:8px;}
+.lor-priority.High{background:#fee2e2;color:#dc2626;}
+.lor-priority.Medium{background:#fffbeb;color:#d97706;}
+.lor-card p{font-size:.8rem;color:#64748b;margin:0;}
+
+/* Timeline */
+.timeline-list{list-style:none;padding:0;margin:0 0 20px;position:relative;}
+.timeline-list::before{content:'';position:absolute;left:20px;top:0;bottom:0;width:2px;background:#e2e8f0;}
+.timeline-item{display:flex;gap:16px;margin-bottom:20px;position:relative;}
+.tl-dot{width:40px;height:40px;border-radius:50%;background:#7c3aed;color:#fff;font-size:.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;z-index:1;box-shadow:0 0 0 4px #fff;}
+.tl-dot.Critical{background:#dc2626;}
+.tl-dot.High{background:#f97316;}
+.tl-dot.Medium{background:#d97706;}
+.tl-dot.Low{background:#16a34a;}
+.tl-content{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.07);padding:16px;flex:1;}
+.tl-content h5{font-size:.9rem;font-weight:700;color:#1a0533;margin:0 0 6px;}
+.tl-task{font-size:.82rem;color:#374151;padding:3px 0;display:flex;align-items:flex-start;gap:6px;}
+.tl-task::before{content:'→';color:#7c3aed;font-weight:700;flex-shrink:0;}
+.priority-pill{float:right;padding:2px 8px;border-radius:10px;font-size:.7rem;font-weight:700;}
+.priority-pill.Critical{background:#fee2e2;color:#dc2626;}
+.priority-pill.High{background:#fff7ed;color:#f97316;}
+.priority-pill.Medium{background:#fffbeb;color:#d97706;}
+.priority-pill.Low{background:#f0fdf4;color:#16a34a;}
+
+/* Key differentiators */
+.diff-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-bottom:20px;}
+.diff-card{background:linear-gradient(135deg,#faf5ff,#f0f0ff);border:1.5px solid #c4b5fd;border-radius:12px;padding:16px;}
+.diff-card i{color:#7c3aed;font-size:1.3rem;margin-bottom:8px;}
+.diff-card p{font-size:.88rem;color:#374151;margin:0;font-weight:500;}
+
+/* Financial */
+.fin-card{background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.08);padding:24px;margin-bottom:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;}
+.fin-stat{text-align:center;padding:16px;background:#faf5ff;border-radius:12px;}
+.fin-stat .fs-val{font-size:1.4rem;font-weight:800;color:#7c3aed;}
+.fin-stat .fs-label{font-size:.75rem;color:#64748b;margin-top:4px;}
+
+/* Loading/Error */
+.as-loading{display:none;text-align:center;padding:60px 20px;}
+.as-loading.visible{display:block;}
+.spin-ring{width:56px;height:56px;border:4px solid #e2e8f0;border-top:4px solid #7c3aed;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.as-error{display:none;background:#fff1f2;border:1px solid #fecdd3;border-radius:12px;padding:16px;color:#dc2626;margin-bottom:16px;}
+.as-error.visible{display:block;}
+
+@media(max-width:900px){.as-layout{grid-template-columns:1fr;}.as-form-card{position:static;}.profile-assess{grid-template-columns:1fr;}}
+</style>
+{% endblock %}
+{% block content %}
+<div class="as-hero">
+  <div class="as-badge"><i class="fas fa-bullseye"></i> AI-Powered Strategy Engine</div>
+  <h1><i class="fas fa-chess"></i> Application Strategy Recommender</h1>
+  <p>Your complete, personalized roadmap — university portfolio, SOP blueprint, LOR strategy, and timeline</p>
+</div>
+
+<div class="as-main">
+  <div class="as-layout">
+    <!-- Form -->
+    <div class="as-form-card">
+      <h3>Your Profile</h3>
+      <p>Fill in your details for a hyper-personalized strategy</p>
+
+      <div class="fl">Field of Study</div>
+      <select id="asField">
+        <option>Computer Science / IT</option><option>Data Science / AI / ML</option>
+        <option>Electrical Engineering</option><option>Mechanical Engineering</option>
+        <option>Business Administration (MBA)</option><option>Finance / Economics</option>
+        <option>Biotechnology / Life Sciences</option><option>Public Policy / Law</option>
+      </select>
+      <div class="fl">GPA / CGPA</div>
+      <input id="asGpa" type="text" placeholder="e.g. 8.7/10 or 3.6/4.0">
+      <div class="fl">GRE / GMAT Score</div>
+      <input id="asGre" type="text" placeholder="e.g. GRE 320 or GMAT 710">
+      <div class="fl">TOEFL / IELTS Score</div>
+      <input id="asToefl" type="text" placeholder="e.g. TOEFL 108 or IELTS 7.5">
+      <div class="fl">Work Experience</div>
+      <input id="asWork" type="text" placeholder="e.g. 2 years at Infosys">
+      <div class="fl">Research Experience</div>
+      <select id="asResearch">
+        <option value="none">None</option><option value="minor">Minor (course projects)</option>
+        <option value="moderate">Moderate (lab experience)</option><option value="strong">Strong (publications/thesis)</option>
+      </select>
+      <div class="fl">Target Countries</div>
+      <div class="country-checks" id="countryChecks">
+        <label class="ctry-chip checked" onclick="toggleChip(this)"><input type="checkbox" checked value="USA">🇺🇸 USA</label>
+        <label class="ctry-chip" onclick="toggleChip(this)"><input type="checkbox" value="Canada">🇨🇦 Canada</label>
+        <label class="ctry-chip" onclick="toggleChip(this)"><input type="checkbox" value="UK">🇬🇧 UK</label>
+        <label class="ctry-chip" onclick="toggleChip(this)"><input type="checkbox" value="Germany">🇩🇪 Germany</label>
+        <label class="ctry-chip" onclick="toggleChip(this)"><input type="checkbox" value="Australia">🇦🇺 Australia</label>
+        <label class="ctry-chip" onclick="toggleChip(this)"><input type="checkbox" value="Singapore">🇸🇬 Singapore</label>
+      </div>
+      <div class="fl">Annual Budget</div>
+      <select id="asBudget">
+        <option>Under ₹20L</option><option>₹20-35L</option><option>₹35-50L</option><option>₹50L+</option>
+      </select>
+      <div class="fl">Target Intake</div>
+      <select id="asIntake">
+        <option>Fall 2025</option><option>Spring 2026</option><option>Fall 2026</option><option>Spring 2027</option>
+      </select>
+      <div class="fl">5-Year Career Goal</div>
+      <input id="asCareer" type="text" placeholder="e.g. Product Manager at FAANG">
+      <div class="fl">Your Strengths (optional)</div>
+      <textarea id="asStrengths" placeholder="e.g. 2 published papers, led a team of 10..."></textarea>
+      <div class="fl">Weak Areas (optional)</div>
+      <textarea id="asWeak" placeholder="e.g. No GRE, low GPA in first year..."></textarea>
+
+      <button class="gen-btn" id="stratBtn" onclick="generateStrategy()">
+        <i class="fas fa-chess-king"></i> Generate My Strategy
+      </button>
+    </div>
+
+    <!-- Results -->
+    <div>
+      <div class="as-loading" id="asLoading">
+        <div class="spin-ring"></div>
+        <h3 style="color:#7c3aed;font-weight:700;">Building your personal strategy…</h3>
+        <p style="color:#64748b;">AI is analyzing your profile, shortlisting universities, and crafting your SOP blueprint</p>
+      </div>
+      <div class="as-error" id="asError"></div>
+
+      <div class="as-results" id="asResults">
+
+        <!-- Profile Assessment -->
+        <div class="sec-title"><i class="fas fa-user-check" style="color:#7c3aed;"></i> Profile Assessment</div>
+        <div class="profile-assess" id="profileAssess"></div>
+
+        <!-- University Portfolio -->
+        <div class="sec-title"><i class="fas fa-university" style="color:#4f46e5;"></i> Your University Portfolio</div>
+        <div class="portfolio-tabs">
+          <button class="p-tab reach active" onclick="showTier('reach',this)">🎯 Reach</button>
+          <button class="p-tab target" onclick="showTier('target',this)">✅ Target</button>
+          <button class="p-tab safe" onclick="showTier('safe',this)">🛡️ Safe</button>
+        </div>
+        <div id="tierReach" class="port-grid"></div>
+        <div id="tierTarget" class="port-grid" style="display:none;"></div>
+        <div id="tierSafe" class="port-grid" style="display:none;"></div>
+
+        <!-- SOP Strategy -->
+        <div class="sec-title"><i class="fas fa-pen-fancy" style="color:#7c3aed;"></i> SOP Blueprint</div>
+        <div class="sop-card" id="sopCard"></div>
+
+        <!-- LOR Strategy -->
+        <div class="sec-title"><i class="fas fa-envelope-open-text" style="color:#16a34a;"></i> LOR Strategy</div>
+        <div class="lor-grid" id="lorGrid"></div>
+
+        <!-- Timeline -->
+        <div class="sec-title"><i class="fas fa-road" style="color:#f97316;"></i> Month-by-Month Timeline</div>
+        <ul class="timeline-list" id="stratTimeline"></ul>
+
+        <!-- Differentiators -->
+        <div class="sec-title"><i class="fas fa-star" style="color:#d97706;"></i> Your Key Differentiators</div>
+        <div class="diff-grid" id="diffGrid"></div>
+
+        <!-- Financial -->
+        <div class="sec-title"><i class="fas fa-coins" style="color:#16a34a;"></i> Financial Strategy</div>
+        <div class="fin-card" id="finCard"></div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleChip(el){
+  const cb = el.querySelector('input');
+  cb.checked = !cb.checked;
+  el.classList.toggle('checked', cb.checked);
+}
+
+function showTier(tier, btn){
+  document.querySelectorAll('.portfolio-tabs .p-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  ['reach','target','safe'].forEach(t=>{ document.getElementById('tier'+t.charAt(0).toUpperCase()+t.slice(1)).style.display = t===tier?'grid':'none'; });
+}
+
+async function generateStrategy(){
+  const countries = [...document.querySelectorAll('#countryChecks input:checked')].map(c=>c.value).join(', ');
+  if(!document.getElementById('asGpa').value){ alert('Please enter your GPA'); return; }
+
+  document.getElementById('asLoading').classList.add('visible');
+  document.getElementById('asResults').classList.remove('visible');
+  document.getElementById('asError').classList.remove('visible');
+  document.getElementById('stratBtn').disabled = true;
+
+  try {
+    const res = await fetch('/api/application-strategy', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        field: document.getElementById('asField').value,
+        gpa: document.getElementById('asGpa').value,
+        gre: document.getElementById('asGre').value,
+        toefl: document.getElementById('asToefl').value,
+        work_exp: document.getElementById('asWork').value,
+        research: document.getElementById('asResearch').value,
+        countries: countries,
+        budget: document.getElementById('asBudget').value,
+        intake: document.getElementById('asIntake').value,
+        career_goal: document.getElementById('asCareer').value,
+        strengths: document.getElementById('asStrengths').value,
+        weaknesses: document.getElementById('asWeak').value,
+      })
+    });
+    const json = await res.json();
+    if(!json.success) throw new Error(json.error);
+    renderStrategy(json.data);
+    document.getElementById('asResults').classList.add('visible');
+    if(window.awardXP) awardXP('application_strategy', json.xp_gained || 110);
+  } catch(e){
+    document.getElementById('asError').textContent = '⚠️ ' + e.message;
+    document.getElementById('asError').classList.add('visible');
+  } finally {
+    document.getElementById('asLoading').classList.remove('visible');
+    document.getElementById('stratBtn').disabled = false;
+  }
+}
+
+function renderStrategy(d){
+  renderAssess(d.profile_assessment);
+  renderPortfolio(d.university_portfolio);
+  renderSOP(d.sop_strategy);
+  renderLOR(d.lor_strategy);
+  renderTimeline(d.timeline);
+  renderDiff(d.key_differentiators);
+  renderFin(d.financial_strategy);
+}
+
+function renderAssess(a){
+  if(!a) return;
+  const pct = a.overall_score || 70;
+  document.getElementById('profileAssess').innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:center;">
+      <div class="score-circle" style="--pct:${pct}">
+        <span class="sc-num">${pct}</span>
+        <span class="sc-label">/ 100</span>
+      </div>
+    </div>
+    <div class="assess-info">
+      <h4>${a.positioning_statement||'Strong candidate'}</h4>
+      <p>${a.competitive_advantage||''}</p>
+      <div>${(a.profile_gaps||[]).map(g=>`<span class="gap-chip"><i class="fas fa-exclamation-circle"></i> ${g}</span>`).join('')}</div>
+    </div>`;
+}
+
+function renderPortfolio(port){
+  ['reach','target','safe'].forEach(tier=>{
+    const unis = (port||{})[tier] || [];
+    const container = document.getElementById('tier'+tier.charAt(0).toUpperCase()+tier.slice(1));
+    container.innerHTML = unis.map(u=>`
+      <div class="port-card ${tier}">
+        <h4>${u.name}</h4>
+        <div class="pc-meta">${u.country} · Accept: ${u.accept_rate||'N/A'} · Avg GRE: ${u.avg_gre||'N/A'}</div>
+        <div class="pc-stat"><span>Success Probability</span><span style="font-weight:700;">${u.success_probability||50}%</span></div>
+        <div class="prob-bar-bg"><div class="prob-bar-fill" style="width:${u.success_probability||50}%;"></div></div>
+        <div class="pc-stat"><span>Scholarship Chance</span><span>${u.scholarship_chance||'N/A'}</span></div>
+        <div class="pc-stat"><span>Why Apply</span><span style="font-size:.78rem;color:#374151;">${u.why_apply||''}</span></div>
+        ${u.application_tip?`<div class="pc-tip"><i class="fas fa-lightbulb"></i> ${u.application_tip}</div>`:''}
+      </div>`).join('') || '<p style="color:#64748b;font-size:.88rem;">No universities in this tier</p>';
+  });
+}
+
+function renderSOP(sop){
+  if(!sop) return;
+  document.getElementById('sopCard').innerHTML = `
+    <div class="sop-narrative">
+      <h4>Core Narrative</h4>
+      <p>${sop.core_narrative||''}</p>
+    </div>
+    <div style="margin-bottom:12px;">
+      <strong style="font-size:.85rem;">Key Themes: </strong>
+      ${(sop.key_themes||[]).map(t=>`<span class="theme-chip">${t}</span>`).join('')}
+    </div>
+    <div style="margin-bottom:12px;">
+      <strong style="font-size:.85rem;color:#16a34a;">✅ Highlight: </strong>
+      ${(sop.what_to_highlight||[]).map(t=>`<span class="theme-chip" style="background:#f0fdf4;color:#16a34a;">${t}</span>`).join('')}
+    </div>
+    <div style="margin-bottom:16px;">
+      <strong style="font-size:.85rem;color:#dc2626;">❌ Avoid: </strong>
+      ${(sop.what_to_avoid||[]).map(t=>`<span class="theme-chip" style="background:#fff1f2;color:#dc2626;">${t}</span>`).join('')}
+    </div>
+    <div style="font-size:.85rem;font-weight:700;color:#1a0533;margin-bottom:10px;">
+      <i class="fas fa-file-alt"></i> Structure (Target: ${sop.word_count_target||950} words)
+    </div>
+    <ul class="sop-structure">
+      ${(sop.structure||[]).map((s,i)=>`
+        <li>
+          <div class="sop-step-num">${i+1}</div>
+          <div class="sop-step-info">
+            <h5>${s.section}</h5>
+            <p>${s.content||''}</p>
+            <span class="sop-step-wc">${s.word_count||100} words</span>
+          </div>
+        </li>`).join('')}
+    </ul>`;
+}
+
+function renderLOR(lor){
+  if(!lor) return;
+  document.getElementById('lorGrid').innerHTML = (lor.ideal_recommenders||[]).map(r=>`
+    <div class="lor-card">
+      <h4>${r.type}</h4>
+      <span class="lor-priority ${r.priority}">${r.priority} Priority</span>
+      <p>${r.what_to_ask||''}</p>
+      ${lor.request_timeline?`<p style="margin-top:8px;font-size:.75rem;color:#7c3aed;font-weight:600;"><i class="fas fa-clock"></i> Request ${lor.request_timeline}</p>`:''}
+    </div>`).join('');
+}
+
+function renderTimeline(tl){
+  if(!tl) return;
+  document.getElementById('stratTimeline').innerHTML = tl.map(m=>`
+    <li class="timeline-item">
+      <div class="tl-dot ${m.priority}">${m.month.replace('Month ','M')}</div>
+      <div class="tl-content">
+        <h5>${m.month} <span class="priority-pill ${m.priority}">${m.priority}</span></h5>
+        ${(m.tasks||[]).map(t=>`<div class="tl-task">${t}</div>`).join('')}
+      </div>
+    </li>`).join('');
+}
+
+function renderDiff(diffs){
+  const icons = ['fas fa-star','fas fa-bolt','fas fa-gem','fas fa-fire','fas fa-award'];
+  document.getElementById('diffGrid').innerHTML = (diffs||[]).map((d,i)=>`
+    <div class="diff-card">
+      <i class="${icons[i%icons.length]}"></i>
+      <p>${d}</p>
+    </div>`).join('');
+}
+
+function renderFin(fin){
+  if(!fin) return;
+  const items = [
+    ['Total Estimated Cost', '₹'+((fin.estimated_total_cost_inr||0)/100000).toFixed(0)+'L'],
+    ['Monthly Savings Needed', '₹'+(fin.monthly_savings_needed||0).toLocaleString()],
+    ['Recommended Lender', fin.loan_recommendation||'N/A'],
+  ];
+  document.getElementById('finCard').innerHTML = items.map(([l,v])=>`
+    <div class="fin-stat">
+      <div class="fs-val">${v}</div>
+      <div class="fs-label">${l}</div>
+    </div>`).join('') + `
+    <div class="fin-stat">
+      <div class="fs-val" style="font-size:1rem;">${(fin.scholarship_targets||[]).slice(0,2).join(', ')||'Explore merit awards'}</div>
+      <div class="fs-label">Scholarship Targets</div>
+    </div>`;
+}
+</script>
+{% endblock %}

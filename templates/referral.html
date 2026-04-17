@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+{% block title %}Referral Program – EduBridge AI{% endblock %}
+{% block head %}
+<style>
+.ref-hero{background:linear-gradient(135deg,#451a03,#c2410c,#f97316);color:#fff;padding:52px 0 36px;text-align:center;}
+.ref-hero h1{font-size:2rem;font-weight:800;margin-bottom:6px;}
+.ref-badge{display:inline-block;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:4px 14px;font-size:.8rem;font-weight:600;margin-bottom:14px;}
+.ref-main{max-width:1100px;margin:0 auto;padding:28px 16px;}
+.ref-layout{display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start;}
+
+.ref-code-card{background:#fff;border-radius:20px;box-shadow:0 4px 28px rgba(0,0,0,.1);padding:32px;text-align:center;margin-bottom:20px;}
+.ref-code-card h2{font-size:1.2rem;font-weight:800;color:#1e293b;margin:0 0 6px;}
+.ref-code-card p{font-size:.88rem;color:#64748b;margin:0 0 24px;}
+.code-display{background:linear-gradient(135deg,#fff7ed,#fed7aa);border:2px dashed #f97316;border-radius:16px;padding:20px;margin-bottom:20px;}
+.code-val{font-size:2.2rem;font-weight:900;color:#c2410c;letter-spacing:6px;font-family:monospace;margin-bottom:8px;}
+.code-label{font-size:.8rem;color:#9a3412;font-weight:600;}
+.copy-btn{padding:10px 28px;background:#f97316;color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:.95rem;transition:.2s;margin-right:8px;}
+.copy-btn:hover{background:#c2410c;}
+.share-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px;}
+.share-btn{padding:9px 18px;border-radius:10px;font-weight:700;cursor:pointer;font-size:.85rem;border:2px solid transparent;transition:.2s;display:flex;align-items:center;gap:6px;}
+.share-btn.wa{background:#25d366;color:#fff;}
+.share-btn.li{background:#0077b5;color:#fff;}
+.share-btn.tw{background:#1da1f2;color:#fff;}
+.share-btn.em{background:#f1f5f9;color:#475569;border-color:#e2e8f0;}
+
+.join-card{background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.08);padding:24px;}
+.join-card h2{font-size:1rem;font-weight:800;color:#1e293b;margin:0 0 14px;}
+.join-row{display:flex;gap:10px;align-items:center;}
+.join-input{flex:1;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:.9rem;font-family:inherit;}
+.join-input:focus{outline:none;border-color:#f97316;}
+.join-btn{padding:10px 20px;background:#f97316;color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;white-space:nowrap;}
+
+.rewards-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+.reward-card{background:#fff;border-radius:16px;box-shadow:0 3px 16px rgba(0,0,0,.07);padding:20px;text-align:center;border:2px solid transparent;transition:.3s;}
+.reward-card.earned{border-color:#f97316;background:linear-gradient(135deg,#fff7ed,#fff);}
+.reward-card.locked{opacity:.6;}
+.rc-milestone{font-size:1.8rem;font-weight:900;color:#f97316;margin-bottom:4px;}
+.rc-badge{font-size:1.2rem;margin-bottom:8px;}
+.rc-reward{font-size:.82rem;font-weight:700;color:#1e293b;}
+.rc-lock{font-size:.75rem;color:#94a3b8;margin-top:4px;}
+.earned-tag{background:#f97316;color:#fff;padding:2px 8px;border-radius:6px;font-size:.7rem;font-weight:700;display:inline-block;margin-top:6px;}
+
+.stats-panel{background:#fff;border-radius:20px;box-shadow:0 4px 24px rgba(0,0,0,.08);padding:28px;}
+.sp-header{display:flex;align-items:center;gap:12px;margin-bottom:20px;}
+.sp-count{font-size:3rem;font-weight:900;color:#f97316;line-height:1;}
+.sp-label{font-size:.95rem;font-weight:700;color:#1e293b;}
+.sp-sub{font-size:.8rem;color:#64748b;}
+.progress-wrap{background:#f1f5f9;border-radius:10px;height:14px;overflow:hidden;margin-bottom:6px;}
+.progress-fill{height:100%;background:linear-gradient(90deg,#f97316,#fbbf24);border-radius:10px;transition:width .8s ease;}
+.p-meta{display:flex;justify-content:space-between;font-size:.78rem;color:#64748b;margin-bottom:20px;}
+
+.leaderboard{margin-top:20px;}
+.lb-title{font-size:.88rem;font-weight:800;color:#1e293b;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.lb-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;margin-bottom:6px;font-size:.85rem;transition:.2s;}
+.lb-row.me{background:#fff7ed;border:1.5px solid #fed7aa;}
+.lb-rank{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.75rem;flex-shrink:0;}
+.lb-rank.gold{background:#f59e0b;color:#fff;}
+.lb-rank.silver{background:#94a3b8;color:#fff;}
+.lb-rank.bronze{background:#cd7f32;color:#fff;}
+.lb-rank.normal{background:#f1f5f9;color:#475569;}
+.lb-code{font-weight:700;color:#1e293b;flex:1;font-family:monospace;}
+.lb-count{font-weight:800;color:#f97316;}
+
+.how-card{background:linear-gradient(135deg,#fff7ed,#fed7aa);border-radius:16px;padding:20px;}
+.how-card h4{font-size:.9rem;font-weight:800;color:#92400e;margin:0 0 12px;}
+.how-step{display:flex;gap:10px;margin-bottom:12px;align-items:flex-start;}
+.hs-num{width:24px;height:24px;border-radius:50%;background:#f97316;color:#fff;font-weight:800;font-size:.75rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.hs-text{font-size:.83rem;color:#78350f;line-height:1.5;}
+
+@media(max-width:768px){.ref-layout{grid-template-columns:1fr;}.rewards-grid{grid-template-columns:1fr;}}
+</style>
+{% endblock %}
+{% block content %}
+<div class="ref-hero">
+  <div class="ref-badge">🎁 Referral Program</div>
+  <h1>Invite Friends, Earn Rewards</h1>
+  <p style="opacity:.85;margin:0;font-size:.95rem;">Share EduBridge with fellow students and unlock exclusive badges & XP</p>
+</div>
+
+<div class="ref-main">
+  <div class="ref-layout">
+    <!-- LEFT -->
+    <div>
+      <!-- Referral Code Card -->
+      <div class="ref-code-card">
+        <h2>Your Referral Code</h2>
+        <p>Share this code with friends. When they join EduBridge, you both benefit!</p>
+        <div class="code-display">
+          <div class="code-val" id="myCode">{{ code }}</div>
+          <div class="code-label">Your unique referral code</div>
+        </div>
+        <button class="copy-btn" onclick="copyCode()"><i class="fas fa-copy"></i> Copy Code</button>
+        <button class="copy-btn" style="background:#1e293b;" onclick="copyLink()"><i class="fas fa-link"></i> Copy Link</button>
+        <div class="share-btns">
+          <button class="share-btn wa" onclick="shareWA()"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+          <button class="share-btn li" onclick="shareLI()"><i class="fab fa-linkedin"></i> LinkedIn</button>
+          <button class="share-btn tw" onclick="shareTW()"><i class="fab fa-twitter"></i> Twitter</button>
+          <button class="share-btn em" onclick="shareEM()"><i class="fas fa-envelope"></i> Email</button>
+        </div>
+      </div>
+
+      <!-- Rewards Grid -->
+      <h3 style="font-size:1rem;font-weight:800;color:#1e293b;margin-bottom:12px;">🏆 Reward Milestones</h3>
+      <div class="rewards-grid" id="rewardsGrid">
+        <div class="reward-card locked"><div class="rc-milestone">1</div><div class="rc-badge">🎉</div><div class="rc-reward">100 XP Bonus</div><div class="rc-lock">1 referral</div></div>
+        <div class="reward-card locked"><div class="rc-milestone">3</div><div class="rc-badge">🤝</div><div class="rc-reward">Connector Badge + 300 XP</div><div class="rc-lock">3 referrals</div></div>
+        <div class="reward-card locked"><div class="rc-milestone">5</div><div class="rc-badge">⭐</div><div class="rc-reward">Ambassador Badge + 500 XP</div><div class="rc-lock">5 referrals</div></div>
+        <div class="reward-card locked"><div class="rc-milestone">10</div><div class="rc-badge">👑</div><div class="rc-reward">Champion Badge + 1000 XP</div><div class="rc-lock">10 referrals</div></div>
+      </div>
+
+      <!-- Join with code -->
+      <div class="join-card">
+        <h2>Have a Referral Code?</h2>
+        <div class="join-row">
+          <input class="join-input" id="joinCode" placeholder="Enter code (e.g. AB12CD34)" maxlength="8" style="text-transform:uppercase;">
+          <button class="join-btn" onclick="useCode()"><i class="fas fa-gift"></i> Use Code</button>
+        </div>
+        <div id="joinResult" style="margin-top:10px;font-size:.85rem;"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Stats + Leaderboard -->
+    <div>
+      <div class="stats-panel">
+        <div class="sp-header">
+          <div class="sp-count" id="refCount">0</div>
+          <div><div class="sp-label">Friends Referred</div><div class="sp-sub" id="nextRewardLabel">Loading your stats...</div></div>
+        </div>
+        <div class="progress-wrap"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+        <div class="p-meta"><span id="progressLeft">0 more to next reward</span><span id="progressRight"></span></div>
+
+        <div class="leaderboard">
+          <div class="lb-title"><i class="fas fa-trophy" style="color:#f59e0b;"></i> Top Referrers</div>
+          <div id="leaderboard"></div>
+        </div>
+      </div>
+
+      <div class="how-card" style="margin-top:16px;">
+        <h4>📖 How It Works</h4>
+        <div class="how-step"><div class="hs-num">1</div><div class="hs-text"><strong>Copy your code</strong> and share it with friends who are planning to study abroad.</div></div>
+        <div class="how-step"><div class="hs-num">2</div><div class="hs-text"><strong>Friend joins</strong> EduBridge and enters your referral code.</div></div>
+        <div class="how-step"><div class="hs-num">3</div><div class="hs-text"><strong>You earn XP</strong> and unlock badges based on how many friends join. Rewards stack!</div></div>
+        <div class="how-step"><div class="hs-num">4</div><div class="hs-text"><strong>Top referrers</strong> appear on the leaderboard and get exclusive champion features.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const myCode = document.getElementById('myCode').textContent.trim();
+const baseUrl = window.location.origin;
+const refLink = `${baseUrl}/?ref=${myCode}`;
+
+async function loadStats() {
+  const res = await fetch('/api/referral/stats');
+  const d = await res.json();
+  if(!d.success) return;
+  document.getElementById('refCount').textContent = d.count;
+  const next = d.next_reward;
+  const earned = d.earned_rewards || [];
+  if(next) {
+    const remaining = next.milestone - d.count;
+    document.getElementById('nextRewardLabel').textContent = `${remaining} more for ${next.reward}`;
+    document.getElementById('progressLeft').textContent = `${remaining} more to unlock`;
+    document.getElementById('progressRight').textContent = next.reward;
+    const pct = (d.count / next.milestone) * 100;
+    document.getElementById('progressFill').style.width = Math.min(pct,100)+'%';
+  } else {
+    document.getElementById('nextRewardLabel').textContent = 'Champion status achieved! 🎉';
+    document.getElementById('progressFill').style.width = '100%';
+  }
+  // Update reward cards
+  const rewards = [{milestone:1,badge:'🎉',reward:'100 XP Bonus'},{milestone:3,badge:'🤝',reward:'Connector Badge + 300 XP'},{milestone:5,badge:'⭐',reward:'Ambassador Badge + 500 XP'},{milestone:10,badge:'👑',reward:'Champion Badge + 1000 XP'}];
+  document.getElementById('rewardsGrid').innerHTML = rewards.map(r => {
+    const isEarned = earned.some(e=>e.milestone===r.milestone);
+    return `<div class="reward-card ${isEarned?'earned':'locked'}">
+      <div class="rc-milestone">${r.milestone}</div>
+      <div class="rc-badge">${r.badge}</div>
+      <div class="rc-reward">${r.reward}</div>
+      ${isEarned ? '<span class="earned-tag">✓ Unlocked</span>' : `<div class="rc-lock">${r.milestone} referral${r.milestone>1?'s':''}</div>`}
+    </div>`;
+  }).join('');
+  loadLeaderboard(d.code);
+}
+
+async function loadLeaderboard(myCode) {
+  const res = await fetch('/api/referral/leaderboard');
+  const d = await res.json();
+  if(!d.success) return;
+  const rankIcons = ['gold','silver','bronze'];
+  document.getElementById('leaderboard').innerHTML = d.leaderboard.slice(0,8).map((b,i) => `
+    <div class="lb-row ${b.code===myCode?'me':''}">
+      <div class="lb-rank ${rankIcons[i]||'normal'}">${i+1}</div>
+      <div class="lb-code">${b.code===myCode?'YOU ('+b.code+')':b.code}</div>
+      <div class="lb-count">${b.count} refs</div>
+    </div>`).join('') || '<p style="color:#94a3b8;font-size:.85rem;">Be the first to refer a friend!</p>';
+}
+
+function copyCode() {
+  navigator.clipboard.writeText(myCode).then(()=>showToast('Code copied!','success'));
+}
+function copyLink() {
+  navigator.clipboard.writeText(refLink).then(()=>showToast('Link copied!','success'));
+}
+function shareWA() {
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`🎓 Join EduBridge AI — the best study abroad platform for Indian students! Use my code ${myCode} to get started: ${refLink}`)}`,'_blank');
+}
+function shareLI() {
+  window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(refLink)}`,'_blank');
+}
+function shareTW() {
+  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`🎓 Join EduBridge AI for study abroad guidance! Use code ${myCode} → ${refLink}`)}`,'_blank');
+}
+function shareEM() {
+  window.location.href = `mailto:?subject=Join EduBridge AI&body=${encodeURIComponent(`Hi! I've been using EduBridge AI for my study abroad prep — it's amazing! Join with my referral code ${myCode}: ${refLink}`)}`;
+}
+
+async function useCode() {
+  const code = document.getElementById('joinCode').value.trim().toUpperCase();
+  if(!code || code.length < 6) { alert('Enter a valid referral code.'); return; }
+  if(code === myCode) { document.getElementById('joinResult').innerHTML = '<span style="color:#dc2626;">You cannot use your own code.</span>'; return; }
+  const res = await fetch('/api/referral/use',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code})});
+  const d = await res.json();
+  if(d.success) {
+    document.getElementById('joinResult').innerHTML = `<span style="color:#16a34a;font-weight:700;">✓ Code applied! ${d.milestone?'🎉 Milestone reward unlocked!':''}</span>`;
+    if(window.awardXP) awardXP(50);
+  } else {
+    document.getElementById('joinResult').innerHTML = `<span style="color:#dc2626;">${d.error||'Invalid code.'}</span>`;
+  }
+}
+
+function showToast(msg, type) {
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  document.getElementById('toastContainer').appendChild(t);
+  setTimeout(()=>t.remove(),3000);
+}
+
+loadStats();
+</script>
+{% endblock %}

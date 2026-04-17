@@ -1,0 +1,385 @@
+{% extends "base.html" %}
+{% block title %}Admission Predictor – EduBridge{% endblock %}
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="page-hero page-hero-purple">
+  <div class="container">
+    <div class="page-hero-icon"><i class="fas fa-brain"></i></div>
+    <h1>Admission Probability Predictor</h1>
+    <p>AI-powered deep analysis of your profile strength, university-specific admission chances, and personalized improvement plan</p>
+    <div class="xp-reward-badge"><i class="fas fa-bolt"></i> Earn 90 XP</div>
+  </div>
+</div>
+
+<div class="container page-container">
+  <div class="tool-layout">
+    <div class="tool-form-panel">
+      <div class="card form-card">
+        <h2 class="form-title"><i class="fas fa-id-card"></i> Full Academic Profile</h2>
+        <form id="admissionForm">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>GPA (out of 4.0) *</label>
+              <input type="number" id="ap_gpa" step="0.01" min="0" max="4" placeholder="e.g. 3.7" required />
+              <span class="form-hint">CGPA/10 × 4 = GPA equivalent</span>
+            </div>
+            <div class="form-group">
+              <label>GRE Verbal (out of 170)</label>
+              <input type="number" id="ap_gre_v" min="130" max="170" placeholder="e.g. 162" />
+            </div>
+            <div class="form-group">
+              <label>GRE Quant (out of 170)</label>
+              <input type="number" id="ap_gre_q" min="130" max="170" placeholder="e.g. 165" />
+            </div>
+            <div class="form-group">
+              <label>GRE AWA (out of 6)</label>
+              <input type="number" id="ap_gre_awa" step="0.5" min="0" max="6" placeholder="e.g. 4.0" />
+            </div>
+            <div class="form-group">
+              <label>TOEFL Score (/ 120)</label>
+              <input type="number" id="ap_toefl" min="0" max="120" placeholder="e.g. 108" />
+            </div>
+            <div class="form-group">
+              <label>Work Experience</label>
+              <select id="ap_work_exp">
+                <option value="0">0 (Fresher)</option>
+                <option value="1">1 year</option>
+                <option value="2">2 years</option>
+                <option value="3">3 years</option>
+                <option value="4">4+ years</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Research Experience</label>
+              <select id="ap_research">
+                <option value="none">None</option>
+                <option value="minor">Minor (course projects)</option>
+                <option value="moderate">Moderate (thesis/paper)</option>
+                <option value="strong">Strong (published/funded)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Publications</label>
+              <select id="ap_publications">
+                <option value="0">0</option>
+                <option value="1">1 (conference/journal)</option>
+                <option value="2">2</option>
+                <option value="3">3+</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Internships / Industry</label>
+              <select id="ap_internships">
+                <option value="0">0</option>
+                <option value="1">1–2</option>
+                <option value="2">3–4</option>
+                <option value="3">5+ / Full-time job</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>SOP Quality (self-rate)</label>
+              <select id="ap_sop">
+                <option value="basic">Basic draft</option>
+                <option value="good">Good (reviewed)</option>
+                <option value="excellent">Excellent (professionally edited)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>LOR Quality</label>
+              <select id="ap_lor">
+                <option value="weak">1–2 average LORs</option>
+                <option value="good">2–3 good LORs</option>
+                <option value="strong">3 strong / professor LORs</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Extracurriculars</label>
+              <select id="ap_extra">
+                <option value="none">None</option>
+                <option value="some">Some clubs/activities</option>
+                <option value="leadership">Leadership roles</option>
+                <option value="awards">National awards / patents</option>
+              </select>
+            </div>
+            <div class="form-group form-group-full">
+              <label>Target University (for specific prediction)</label>
+              <input type="text" id="ap_university" placeholder="e.g. Carnegie Mellon University" />
+            </div>
+            <div class="form-group form-group-full">
+              <label>Program & Specialization</label>
+              <input type="text" id="ap_program" placeholder="e.g. MS Computer Science – Machine Learning" />
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" id="predictBtn">
+            <i class="fas fa-magic"></i> Predict My Admission Chances
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="tool-results-panel" id="apResults" style="display:none;">
+      <div class="results-loading" id="apLoading">
+        <div class="loading-spinner"></div>
+        <p style="font-weight:600;">AI evaluating your complete profile...</p>
+        <div class="loading-steps">
+          <div class="loading-step active">Scoring academic strength</div>
+          <div class="loading-step">Analyzing against admission benchmarks</div>
+          <div class="loading-step">Identifying improvement levers</div>
+          <div class="loading-step">Generating personalized strategy</div>
+        </div>
+      </div>
+
+      <div id="apContent" style="display:none;">
+
+        <!-- Top Row: Overall + Radar -->
+        <div class="admit-top-row">
+          <div class="card admit-gauge-card">
+            <h3 class="results-section-title"><i class="fas fa-bullseye"></i> Overall Probability</h3>
+            <div class="gauge-container">
+              <div class="gauge-ring" id="gaugeRing">
+                <div class="gauge-inner">
+                  <div class="gauge-percent" id="gaugePercent">0%</div>
+                  <div class="gauge-label">Admit Chance</div>
+                </div>
+              </div>
+            </div>
+            <div id="apVerdict" class="verdict-text" style="margin-top:1rem;"></div>
+            <div class="strength-score-row" id="strengthRow"></div>
+          </div>
+
+          <div class="card admit-radar-card">
+            <h3 class="results-section-title"><i class="fas fa-chart-radar"></i> Profile Dimensions</h3>
+            <canvas id="admitRadar" height="220"></canvas>
+          </div>
+        </div>
+
+        <!-- Profile Breakdown -->
+        <div class="card results-section">
+          <h3 class="results-section-title"><i class="fas fa-layer-group"></i> Detailed Profile Scoring</h3>
+          <div id="profileBreakdown"></div>
+        </div>
+
+        <!-- University Tiers -->
+        <div class="card results-section">
+          <h3 class="results-section-title"><i class="fas fa-university"></i> Admission Chances by University Tier</h3>
+          <div id="tierAnalysis"></div>
+          <div style="margin-top:1rem;">
+            <canvas id="tierChart" height="160"></canvas>
+          </div>
+        </div>
+
+        <!-- School-Specific Predictions -->
+        <div class="card results-section" id="schoolPredPanel" style="display:none;">
+          <h3 class="results-section-title"><i class="fas fa-map-marker-alt"></i> University-Specific Prediction</h3>
+          <div id="schoolPredContent"></div>
+        </div>
+
+        <!-- Improvement Roadmap -->
+        <div class="card results-section">
+          <h3 class="results-section-title"><i class="fas fa-chart-line"></i> Profile Improvement Roadmap</h3>
+          <div id="improvements"></div>
+        </div>
+
+        <!-- SOP & Application Tips -->
+        <div class="card results-section">
+          <h3 class="results-section-title"><i class="fas fa-pen-fancy"></i> Application Strategy Tips</h3>
+          <div id="sopTips"></div>
+        </div>
+
+        <div class="next-steps-bar">
+          <span>Ready to apply?</span>
+          <a href="/timeline-generator" class="btn btn-sm btn-primary">Generate Timeline <i class="fas fa-arrow-right"></i></a>
+          <a href="/loan-planner" class="btn btn-sm btn-outline">Plan Financing</a>
+          <a href="/chatbot" class="btn btn-sm btn-outline">Ask AI Mentor</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let admitRadarChart = null, tierChart = null;
+
+document.getElementById('admissionForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('predictBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="btn-spinner"></div> Analyzing...';
+
+  const panel = document.getElementById('apResults');
+  panel.style.display = 'block';
+  document.getElementById('apLoading').style.display = 'flex';
+  document.getElementById('apContent').style.display = 'none';
+  panel.scrollIntoView({ behavior: 'smooth' });
+
+  const gv = parseInt(document.getElementById('ap_gre_v').value) || 0;
+  const gq = parseInt(document.getElementById('ap_gre_q').value) || 0;
+
+  const payload = {
+    gpa: document.getElementById('ap_gpa').value,
+    gre: gv + gq || 310,
+    gre_verbal: gv, gre_quant: gq,
+    gre_awa: document.getElementById('ap_gre_awa').value || 3.5,
+    toefl: document.getElementById('ap_toefl').value || 95,
+    work_exp: document.getElementById('ap_work_exp').value,
+    research: document.getElementById('ap_research').value,
+    publications: document.getElementById('ap_publications').value,
+    internships: document.getElementById('ap_internships').value,
+    sop_quality: document.getElementById('ap_sop').value,
+    lor_quality: document.getElementById('ap_lor').value,
+    extracurriculars: document.getElementById('ap_extra').value,
+    university: document.getElementById('ap_university').value,
+    program: document.getElementById('ap_program').value
+  };
+
+  try {
+    const res = await fetch('/api/predict-admission', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    const data = await res.json();
+    if (data.success) {
+      renderPrediction(data.data, payload);
+      document.getElementById('apLoading').style.display = 'none';
+      document.getElementById('apContent').style.display = 'block';
+      await awardXP('admission_predictor');
+      showToast('Prediction complete! +90 XP', 'success');
+    } else {
+      showToast('Error: ' + data.error, 'error');
+      panel.style.display = 'none';
+    }
+  } catch (err) {
+    showToast('Network error. Please try again.', 'error');
+    panel.style.display = 'none';
+  }
+  btn.disabled = false;
+  btn.innerHTML = '<i class="fas fa-magic"></i> Predict My Admission Chances';
+});
+
+function renderPrediction(d, payload) {
+  const prob = d.overall_admission_probability || 0;
+  const colors = prob >= 70 ? '#22c55e' : prob >= 40 ? '#f59e0b' : '#ef4444';
+  const gauge = document.getElementById('gaugeRing');
+  gauge.style.background = `conic-gradient(${colors} 0% ${prob}%, #e2e8f0 ${prob}% 100%)`;
+  setTimeout(() => {
+    document.getElementById('gaugePercent').textContent = prob + '%';
+    document.getElementById('gaugePercent').style.color = colors;
+  }, 100);
+
+  document.getElementById('apVerdict').innerHTML = `
+    <p style="font-size:1rem;font-weight:700;color:${colors};">${prob >= 70 ? '✅ Strong Profile' : prob >= 40 ? '⚠️ Moderate Profile' : '⛔ Needs Improvement'}</p>
+    <p style="font-size:0.875rem;color:var(--gray-600);line-height:1.6;">${d.verdict || ''}</p>`;
+
+  document.getElementById('strengthRow').innerHTML = `
+    <div style="display:flex;gap:1rem;margin-top:1rem;flex-wrap:wrap;">
+      <div style="text-align:center;flex:1;"><div style="font-size:1.3rem;font-weight:800;color:var(--primary);">${d.strength_score || '?'}</div><div style="font-size:0.72rem;color:var(--gray-500);">Strength Score</div></div>
+      <div style="text-align:center;flex:1;"><div style="font-size:1.3rem;font-weight:800;color:var(--orange);">${d.competitiveness_rank || '?'}</div><div style="font-size:0.72rem;color:var(--gray-500);">Percentile</div></div>
+      <div style="text-align:center;flex:1;"><div style="font-size:1.3rem;font-weight:800;color:var(--success);">${d.recommended_unis_count || 8}</div><div style="font-size:0.72rem;color:var(--gray-500);">Universities to Apply</div></div>
+    </div>`;
+
+  // Radar Chart
+  const breakdown = d.profile_breakdown || {};
+  const keys = Object.keys(breakdown);
+  const scores = keys.map(k => breakdown[k].score || 0);
+  if (admitRadarChart) admitRadarChart.destroy();
+  admitRadarChart = new Chart(document.getElementById('admitRadar').getContext('2d'), {
+    type: 'radar',
+    data: {
+      labels: keys.map(k => k.replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase())),
+      datasets: [{
+        label: 'Your Profile',
+        data: scores,
+        backgroundColor: 'rgba(147,51,234,0.15)',
+        borderColor: '#9333ea',
+        pointBackgroundColor: '#9333ea',
+        pointRadius: 5,
+        borderWidth: 2
+      }, {
+        label: 'Top Program Avg',
+        data: keys.map(() => 78),
+        backgroundColor: 'rgba(148,163,184,0.1)',
+        borderColor: '#94a3b8',
+        borderDash: [5, 3],
+        pointRadius: 3,
+        borderWidth: 1.5
+      }]
+    },
+    options: { scales: { r: { min: 0, max: 100, ticks: { stepSize: 25, font: { size: 10 } }, pointLabels: { font: { size: 11, weight: '600' } } } }, plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } } }
+  });
+
+  // Breakdown
+  document.getElementById('profileBreakdown').innerHTML = keys.map(key => {
+    const val = breakdown[key];
+    const col = scoreColor(val.score);
+    return `<div class="breakdown-item">
+      <div class="breakdown-header">
+        <span class="breakdown-key">${key.replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase())}</span>
+        <span class="breakdown-score" style="color:${col};">${val.score}/100</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${val.score}%;background:${col};"></div></div>
+      <p class="breakdown-comment">${val.comment}</p>
+      ${val.benchmark ? `<p style="font-size:0.75rem;color:var(--gray-400);">Benchmark: ${val.benchmark}</p>` : ''}
+    </div>`;
+  }).join('');
+
+  // Tiers
+  const tiers = d.university_tiers || [];
+  document.getElementById('tierAnalysis').innerHTML = tiers.map(t => `
+    <div class="tier-row">
+      <div class="tier-label tier-${t.tier.toLowerCase()}">${t.tier}</div>
+      <div class="tier-unis">${(t.examples||[]).join(', ')}</div>
+      <div class="tier-prob">
+        <div class="tier-bar"><div class="tier-fill" style="width:${t.probability}%;background:${tierColor(t.tier)};"></div></div>
+        <span style="font-weight:700;min-width:36px;">${t.probability}%</span>
+      </div>
+    </div>`).join('');
+
+  if (tierChart) tierChart.destroy();
+  tierChart = new Chart(document.getElementById('tierChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: tiers.map(t => t.tier),
+      datasets: [{ data: tiers.map(t => t.probability), backgroundColor: tiers.map(t => tierColor(t.tier)), borderRadius: 8 }]
+    },
+    options: { indexAxis: 'y', plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.raw + '% admission chance' } } }, scales: { x: { max: 100, ticks: { callback: v => v + '%' } }, y: { grid: { display: false } } } }
+  });
+
+  // School-specific
+  if (d.specific_university_prediction && Object.keys(d.specific_university_prediction).length) {
+    document.getElementById('schoolPredPanel').style.display = 'block';
+    const sp = d.specific_university_prediction;
+    document.getElementById('schoolPredContent').innerHTML = `
+      <div class="school-pred-card">
+        <div class="school-pred-header"><h4>${sp.university}</h4><div class="school-prob" style="color:${scoreColor(sp.probability)};">${sp.probability}%</div></div>
+        <div class="school-factors">${(sp.positive_factors||[]).map(f=>`<div class="factor-item factor-pos"><i class="fas fa-plus-circle"></i> ${f}</div>`).join('')}${(sp.negative_factors||[]).map(f=>`<div class="factor-item factor-neg"><i class="fas fa-minus-circle"></i> ${f}</div>`).join('')}</div>
+        <p style="font-size:0.875rem;color:var(--gray-600);margin-top:0.75rem;">${sp.advice || ''}</p>
+      </div>`;
+  }
+
+  // Improvements
+  document.getElementById('improvements').innerHTML = (d.improvement_areas || []).map(a => `
+    <div class="improvement-item">
+      <div class="imp-area"><i class="fas fa-arrow-trend-up" style="color:var(--warning);"></i> ${a.area}</div>
+      <div class="imp-details">
+        <span class="imp-current">Current: ${a.current}</span>
+        <i class="fas fa-long-arrow-alt-right" style="color:var(--gray-400);"></i>
+        <span class="imp-target">Target: ${a.target}</span>
+      </div>
+      <div class="imp-impact"><i class="fas fa-bolt"></i> ${a.impact}</div>
+      ${a.how_to ? `<div style="font-size:0.78rem;color:var(--gray-600);margin-top:0.35rem;padding-left:0.5rem;border-left:2px solid var(--gray-200);">${a.how_to}</div>` : ''}
+    </div>`).join('') || '<p style="color:var(--gray-500);">Your profile looks competitive!</p>';
+
+  // Tips
+  document.getElementById('sopTips').innerHTML = `<div class="tips-grid">${(d.sos_tips || []).map((t, i) => `
+    <div class="tip-card">
+      <div class="tip-num">${i+1}</div>
+      <p>${t}</p>
+    </div>`).join('')}</div>`;
+}
+
+function scoreColor(s) { return s >= 80 ? '#22c55e' : s >= 60 ? '#f59e0b' : '#ef4444'; }
+function tierColor(t) { return t === 'Safe' ? '#22c55e' : t === 'Target' ? '#f59e0b' : '#ef4444'; }
+</script>
+{% endblock %}

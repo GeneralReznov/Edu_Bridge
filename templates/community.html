@@ -1,0 +1,349 @@
+{% extends "base.html" %}
+{% block title %}Community Forum – EduBridge AI{% endblock %}
+{% block head %}
+<style>
+.cm-hero{background:linear-gradient(135deg,#1e1b4b,#4338ca,#6366f1);color:#fff;padding:48px 0 32px;text-align:center;}
+.cm-hero h1{font-size:2rem;font-weight:800;margin-bottom:6px;}
+.cm-badge{display:inline-block;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:4px 14px;font-size:.8rem;font-weight:600;margin-bottom:14px;}
+.cm-main{max-width:1200px;margin:0 auto;padding:24px 16px;}
+.cm-layout{display:grid;grid-template-columns:1fr 300px;gap:24px;align-items:start;}
+
+/* Toolbar */
+.cm-toolbar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center;}
+.cm-toolbar input{flex:1;min-width:200px;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:.88rem;font-family:inherit;}
+.cm-toolbar input:focus{outline:none;border-color:#6366f1;}
+.sort-btns{display:flex;gap:6px;}
+.sort-btn{padding:8px 14px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.8rem;font-weight:600;cursor:pointer;background:#fff;color:#64748b;transition:.2s;}
+.sort-btn.active{background:#6366f1;color:#fff;border-color:#6366f1;}
+.new-post-btn{padding:10px 20px;background:linear-gradient(135deg,#6366f1,#818cf8);color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;white-space:nowrap;font-size:.88rem;}
+.new-post-btn:hover{transform:translateY(-1px);}
+
+/* Tag chips */
+.tag-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px;}
+.tag-chip{padding:4px 12px;border-radius:12px;font-size:.75rem;font-weight:700;cursor:pointer;border:1.5px solid transparent;transition:.2s;background:#f1f5f9;color:#475569;}
+.tag-chip:hover,.tag-chip.active{background:#ede9fe;color:#6366f1;border-color:#c4b5fd;}
+
+/* Post card */
+.post-card{background:#fff;border-radius:14px;box-shadow:0 3px 16px rgba(0,0,0,.07);padding:18px 20px;margin-bottom:14px;transition:.2s;cursor:pointer;}
+.post-card:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.1);}
+.pc-top{display:flex;gap:12px;align-items:flex-start;}
+.pc-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#818cf8);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.95rem;flex-shrink:0;}
+.pc-meta{flex:1;}
+.pc-title{font-size:.95rem;font-weight:700;color:#1e293b;margin-bottom:4px;line-height:1.4;}
+.pc-body{font-size:.82rem;color:#64748b;line-height:1.5;margin-bottom:8px;}
+.pc-footer{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+.pc-tag{padding:2px 8px;border-radius:8px;font-size:.72rem;font-weight:700;background:#ede9fe;color:#6366f1;}
+.pc-stat{font-size:.78rem;color:#94a3b8;display:flex;align-items:center;gap:4px;}
+.answered-badge{padding:2px 8px;border-radius:8px;font-size:.72rem;font-weight:700;background:#d1fae5;color:#16a34a;}
+.ai-badge{padding:2px 8px;border-radius:8px;font-size:.72rem;font-weight:700;background:#dbeafe;color:#1d4ed8;}
+
+/* Sidebar */
+.cm-sidebar{display:flex;flex-direction:column;gap:16px;}
+.side-card{background:#fff;border-radius:14px;box-shadow:0 3px 16px rgba(0,0,0,.07);padding:20px;}
+.side-card h4{font-size:.9rem;font-weight:800;color:#1e293b;margin:0 0 14px;}
+.hot-post{padding:8px 0;border-bottom:1px solid #f1f5f9;cursor:pointer;}
+.hot-post:last-child{border:none;}
+.hot-title{font-size:.82rem;font-weight:600;color:#1e293b;line-height:1.4;margin-bottom:2px;}
+.hot-meta{font-size:.72rem;color:#94a3b8;}
+.stat-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:.83rem;}
+.stat-row:last-child{border:none;}
+
+/* Post Detail Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;}
+.modal-overlay.open{display:flex;}
+.post-modal{background:#fff;border-radius:20px;width:100%;max-width:720px;box-shadow:0 20px 60px rgba(0,0,0,.3);margin:auto;}
+.pm-header{padding:24px 28px 18px;border-bottom:1px solid #f1f5f9;}
+.pm-title{font-size:1.15rem;font-weight:800;color:#1e293b;margin-bottom:8px;line-height:1.4;}
+.pm-body{padding:20px 28px;border-bottom:1px solid #f1f5f9;font-size:.9rem;color:#374151;line-height:1.7;}
+.pm-answers{padding:20px 28px;}
+.pm-answers h4{font-size:.88rem;font-weight:800;color:#1e293b;margin:0 0 14px;text-transform:uppercase;letter-spacing:.05em;}
+.answer-card{background:#f8fafc;border-radius:12px;padding:14px 16px;margin-bottom:10px;border-left:3px solid #6366f1;}
+.answer-card.ai{border-left-color:#1d4ed8;background:#eff6ff;}
+.answer-card.accepted{border-left-color:#16a34a;background:#f0fdf4;}
+.ac-author{font-size:.78rem;font-weight:700;color:#64748b;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.ac-body{font-size:.88rem;color:#374151;line-height:1.6;}
+.upvote-btn{background:none;border:1px solid #e2e8f0;border-radius:8px;padding:4px 10px;font-size:.78rem;cursor:pointer;color:#64748b;transition:.2s;margin-top:8px;}
+.upvote-btn:hover{border-color:#6366f1;color:#6366f1;}
+.pm-reply{padding:16px 28px 24px;border-top:1px solid #f1f5f9;}
+.pm-reply h4{font-size:.85rem;font-weight:700;color:#1e293b;margin:0 0 10px;}
+.reply-ta{width:100%;box-sizing:border-box;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:.88rem;font-family:inherit;min-height:80px;resize:vertical;}
+.reply-ta:focus{outline:none;border-color:#6366f1;}
+.reply-btns{display:flex;gap:8px;margin-top:10px;}
+.reply-btn{padding:8px 18px;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:.85rem;}
+.reply-btn.human{background:#6366f1;color:#fff;}
+.reply-btn.ai{background:#1d4ed8;color:#fff;}
+
+/* New Post Modal */
+.np-modal{background:#fff;border-radius:20px;width:100%;max-width:600px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.3);margin:auto;}
+.np-modal h2{font-size:1.1rem;font-weight:800;color:#1e293b;margin:0 0 20px;}
+.fl{font-size:.78rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin:12px 0 5px;}
+input.ni,select.ni,textarea.ni{width:100%;box-sizing:border-box;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:.9rem;font-family:inherit;}
+input.ni:focus,select.ni:focus,textarea.ni:focus{outline:none;border-color:#6366f1;}
+textarea.ni{min-height:100px;resize:vertical;}
+.np-footer{display:flex;gap:10px;margin-top:18px;justify-content:flex-end;}
+.np-save{padding:10px 28px;background:linear-gradient(135deg,#6366f1,#818cf8);color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;}
+.np-cancel{padding:10px 20px;background:#f1f5f9;color:#475569;border:none;border-radius:10px;font-weight:700;cursor:pointer;}
+
+@media(max-width:768px){.cm-layout{grid-template-columns:1fr;}}
+</style>
+{% endblock %}
+{% block content %}
+<div class="cm-hero">
+  <div class="cm-badge">🗣️ Community Forum</div>
+  <h1>EduBridge Student Community</h1>
+  <p style="opacity:.85;margin:0;font-size:.95rem;">Ask questions, share advice, and get AI-powered answers</p>
+</div>
+
+<div class="cm-main">
+  <!-- Username setup banner -->
+  <div id="usernameBanner" style="background:#ede9fe;border:1.5px solid #c4b5fd;border-radius:12px;padding:12px 20px;margin-bottom:18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+    <span style="font-size:.88rem;color:#4338ca;font-weight:600;"><i class="fas fa-user-circle"></i> Set your display name for the forum:</span>
+    <input id="usernameInput" placeholder="Your name..." style="padding:6px 12px;border:1.5px solid #c4b5fd;border-radius:8px;font-size:.85rem;font-family:inherit;width:160px;">
+    <button onclick="setUsername()" style="padding:6px 16px;background:#6366f1;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:.83rem;">Set Name</button>
+  </div>
+
+  <div class="cm-layout">
+    <!-- LEFT: Posts -->
+    <div>
+      <div class="cm-toolbar">
+        <input id="searchInput" placeholder="🔍 Search questions..." oninput="loadPosts()">
+        <div class="sort-btns">
+          <button class="sort-btn active" data-sort="trending" onclick="setSort(this,'trending')">🔥 Trending</button>
+          <button class="sort-btn" data-sort="newest" onclick="setSort(this,'newest')">🆕 Newest</button>
+          <button class="sort-btn" data-sort="unanswered" onclick="setSort(this,'unanswered')">❓ Unanswered</button>
+        </div>
+        <button class="new-post-btn" onclick="openNewPost()"><i class="fas fa-pen"></i> Ask Question</button>
+      </div>
+      <div class="tag-row" id="tagRow"></div>
+      <div id="postList"></div>
+    </div>
+
+    <!-- RIGHT: Sidebar -->
+    <div class="cm-sidebar">
+      <div class="side-card">
+        <h4>📊 Community Stats</h4>
+        <div class="stat-row"><span>Total Questions</span><strong id="stat-total">—</strong></div>
+        <div class="stat-row"><span>Answered</span><strong style="color:#16a34a;" id="stat-answered">—</strong></div>
+        <div class="stat-row"><span>AI Answers</span><strong style="color:#1d4ed8;">—</strong></div>
+        <div class="stat-row"><span>XP for posting</span><strong style="color:#f59e0b;">+20 XP</strong></div>
+        <div class="stat-row"><span>XP for answering</span><strong style="color:#f59e0b;">+25 XP</strong></div>
+      </div>
+      <div class="side-card">
+        <h4>🔥 Hot Topics</h4>
+        <div id="hotTopics"></div>
+      </div>
+      <div class="side-card" style="background:linear-gradient(135deg,#ede9fe,#ddd6fe);">
+        <h4 style="color:#4338ca;">💡 Community Guidelines</h4>
+        <ul style="margin:0;padding-left:16px;font-size:.8rem;color:#5b21b6;line-height:1.9;">
+          <li>Be respectful and helpful</li>
+          <li>Share real experiences</li>
+          <li>No spam or self-promotion</li>
+          <li>Mark helpful answers ✓</li>
+          <li>Use AI answers for quick help</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Post Detail Modal -->
+<div class="modal-overlay" id="postModal" onclick="if(event.target===this)closePost()">
+  <div class="post-modal">
+    <div class="pm-header">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <span class="pc-tag" id="pm-tag"></span>
+        <button onclick="closePost()" style="background:none;border:none;font-size:1.1rem;cursor:pointer;color:#64748b;">✕</button>
+      </div>
+      <div class="pm-title" id="pm-title"></div>
+      <div style="font-size:.78rem;color:#94a3b8;" id="pm-meta"></div>
+    </div>
+    <div class="pm-body" id="pm-body"></div>
+    <div class="pm-answers">
+      <h4 id="pm-answers-header"></h4>
+      <div id="pm-answers-list"></div>
+    </div>
+    <div class="pm-reply">
+      <h4>Add Your Answer</h4>
+      <textarea class="reply-ta" id="replyText" placeholder="Share your knowledge or experience..."></textarea>
+      <div class="reply-btns">
+        <button class="reply-btn human" onclick="postAnswer(false)"><i class="fas fa-user"></i> Post My Answer (+25 XP)</button>
+        <button class="reply-btn ai" onclick="postAnswer(true)"><i class="fas fa-robot"></i> Get AI Answer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- New Post Modal -->
+<div class="modal-overlay" id="newPostModal" onclick="if(event.target===this)closeNewPost()">
+  <div class="np-modal">
+    <h2><i class="fas fa-pen" style="color:#6366f1;"></i> Ask a Question</h2>
+    <div class="fl">Question Title (be specific)</div>
+    <input class="ni" id="np-title" placeholder="e.g. How do I improve GRE Quant from 160 to 165?" maxlength="200">
+    <div class="fl">Category / Tag</div>
+    <select class="ni" id="np-tag">
+      <option>GRE</option><option>TOEFL</option><option>Universities</option><option>Loans</option>
+      <option>Visa</option><option>SOP</option><option>Career</option><option>Scholarships</option>
+      <option>Germany</option><option>Canada</option><option>UK</option><option>MBA</option>
+      <option>Internships</option><option>Research</option><option>Interview</option>
+    </select>
+    <div class="fl">Full Details</div>
+    <textarea class="ni" id="np-body" placeholder="Give as much detail as possible — your academic profile, what you've tried, specific context..."></textarea>
+    <div class="np-footer">
+      <button class="np-cancel" onclick="closeNewPost()">Cancel</button>
+      <button class="np-save" onclick="createPost()"><i class="fas fa-paper-plane"></i> Post Question (+20 XP)</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+let currentSort = 'trending';
+let currentTag = '';
+let currentPostId = null;
+
+const TAGS = ['GRE','TOEFL','Universities','Loans','Visa','SOP','Career','Scholarships','Germany','Canada','UK','MBA','Internships','Research','Interview'];
+
+function initTags() {
+  const row = document.getElementById('tagRow');
+  row.innerHTML = `<button class="tag-chip active" onclick="filterTag('',this)">All</button>` +
+    TAGS.map(t => `<button class="tag-chip" onclick="filterTag('${t}',this)">${t}</button>`).join('');
+}
+
+function filterTag(tag, el) {
+  currentTag = tag;
+  document.querySelectorAll('.tag-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  loadPosts();
+}
+
+function setSort(el, sort) {
+  currentSort = sort;
+  document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  loadPosts();
+}
+
+async function loadPosts() {
+  const q = document.getElementById('searchInput').value;
+  const url = `/api/community/posts?sort=${currentSort}&tag=${currentTag}&q=${encodeURIComponent(q)}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  if(!data.success) return;
+  document.getElementById('stat-total').textContent = data.total;
+  const answered = data.posts.filter(p=>p.answered).length;
+  document.getElementById('stat-answered').textContent = answered;
+  renderPosts(data.posts);
+  renderHot(data.posts);
+}
+
+function renderPosts(posts) {
+  const list = document.getElementById('postList');
+  if(!posts.length) {
+    list.innerHTML = `<div style="text-align:center;padding:40px;color:#94a3b8;"><div style="font-size:2.5rem;margin-bottom:10px;">💬</div><p>No posts yet. Be the first to ask!</p></div>`;
+    return;
+  }
+  list.innerHTML = posts.map(p => `
+    <div class="post-card" onclick="openPost(${p.id})">
+      <div class="pc-top">
+        <div class="pc-avatar">${p.avatar||p.author[0]}</div>
+        <div class="pc-meta">
+          <div class="pc-title">${p.title}</div>
+          <div class="pc-body">${p.body}</div>
+          <div class="pc-footer">
+            <span class="pc-tag">${p.tag}</span>
+            ${p.answered ? '<span class="answered-badge">✓ Answered</span>' : ''}
+            <span class="pc-stat"><i class="fas fa-arrow-up"></i> ${p.upvotes}</span>
+            <span class="pc-stat"><i class="fas fa-eye"></i> ${p.views}</span>
+            <span class="pc-stat"><i class="fas fa-comment"></i> ${p.answer_count} answers</span>
+            <span class="pc-stat">${p.author} • ${p.ts.split(' ')[0]}</span>
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function renderHot(posts) {
+  const sorted = [...posts].sort((a,b)=>(b.upvotes*2+b.views)-(a.upvotes*2+a.views)).slice(0,5);
+  document.getElementById('hotTopics').innerHTML = sorted.map(p=>`
+    <div class="hot-post" onclick="openPost(${p.id})">
+      <div class="hot-title">${p.title.substring(0,70)}...</div>
+      <div class="hot-meta">▲ ${p.upvotes} • ${p.views} views</div>
+    </div>`).join('');
+}
+
+async function openPost(id) {
+  currentPostId = id;
+  const res = await fetch(`/api/community/post/${id}`);
+  const data = await res.json();
+  if(!data.success) return;
+  const p = data.post;
+  document.getElementById('pm-tag').textContent = p.tag;
+  document.getElementById('pm-title').textContent = p.title;
+  document.getElementById('pm-meta').textContent = `${p.author} • ${p.ts} • ${p.views} views • ${p.upvotes} upvotes`;
+  document.getElementById('pm-body').textContent = p.body;
+  document.getElementById('pm-answers-header').textContent = `${p.answers.length} Answer${p.answers.length!==1?'s':''}`;
+  document.getElementById('pm-answers-list').innerHTML = p.answers.map(a=>`
+    <div class="answer-card ${a.is_ai?'ai':''} ${a.accepted?'accepted':''}">
+      <div class="ac-author">
+        ${a.accepted ? '<span style="color:#16a34a;">✓ Best Answer</span>' : ''}
+        ${a.is_ai ? '<span class="ai-badge">🤖 AI Answer</span>' : ''}
+        <span>${a.author}</span> • <span>${a.ts}</span>
+      </div>
+      <div class="ac-body">${a.body}</div>
+      <button class="upvote-btn" onclick="upvote(${p.id},${a.id},this)">▲ ${a.upvotes} Upvote</button>
+    </div>`).join('') || '<p style="color:#94a3b8;font-size:.85rem;">No answers yet. Be the first to answer!</p>';
+  document.getElementById('replyText').value = '';
+  document.getElementById('postModal').classList.add('open');
+}
+
+function closePost() { document.getElementById('postModal').classList.remove('open'); }
+
+async function postAnswer(useAI) {
+  const body = document.getElementById('replyText').value.trim();
+  if (!useAI && !body) { alert('Please write your answer first.'); return; }
+  const res = await fetch('/api/community/answer', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({post_id: currentPostId, body, use_ai: useAI})
+  });
+  const data = await res.json();
+  if(data.success) {
+    if(data.xp_gained && window.awardXP) awardXP(data.xp_gained);
+    openPost(currentPostId);
+    loadPosts();
+  }
+}
+
+async function upvote(postId, answerId, btn) {
+  const res = await fetch('/api/community/upvote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({post_id:postId,answer_id:answerId})});
+  const d = await res.json();
+  if(d.success) btn.textContent = `▲ ${d.upvotes} Upvote`;
+}
+
+function openNewPost() { document.getElementById('newPostModal').classList.add('open'); }
+function closeNewPost() { document.getElementById('newPostModal').classList.remove('open'); }
+
+async function createPost() {
+  const title = document.getElementById('np-title').value.trim();
+  const body = document.getElementById('np-body').value.trim();
+  if(title.length < 10) {alert('Title must be at least 10 characters.'); return;}
+  const res = await fetch('/api/community/post/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title,body,tag:document.getElementById('np-tag').value})});
+  const data = await res.json();
+  if(data.success) {
+    if(data.xp_gained && window.awardXP) awardXP(data.xp_gained);
+    closeNewPost();
+    loadPosts();
+    openPost(data.post.id);
+  }
+}
+
+async function setUsername() {
+  const name = document.getElementById('usernameInput').value.trim();
+  if(!name) return;
+  await fetch('/api/community/set-username',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:name})});
+  document.getElementById('usernameBanner').innerHTML = `<span style="font-size:.88rem;color:#16a34a;font-weight:700;"><i class="fas fa-check-circle"></i> Posting as: <strong>${name}</strong></span>`;
+}
+
+initTags();
+loadPosts();
+</script>
+{% endblock %}

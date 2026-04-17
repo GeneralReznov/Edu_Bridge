@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+{% block title %}Feedback – EduBridge AI{% endblock %}
+{% block head %}
+<style>
+.fb-hero{background:linear-gradient(135deg,#0c1445,#1d4ed8,#3b82f6);color:#fff;padding:52px 0 36px;text-align:center;}
+.fb-hero h1{font-size:2rem;font-weight:800;margin-bottom:6px;}
+.fb-badge{display:inline-block;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:4px 14px;font-size:.8rem;font-weight:600;margin-bottom:14px;}
+.fb-main{max-width:1100px;margin:0 auto;padding:28px 16px;}
+.fb-layout{display:grid;grid-template-columns:1fr 380px;gap:24px;align-items:start;}
+
+.fb-form-card{background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.08);padding:32px;}
+.fb-form-card h2{font-size:1.25rem;font-weight:800;color:#1e293b;margin:0 0 4px;}
+.fb-form-card p{font-size:.88rem;color:#64748b;margin:0 0 24px;}
+.fl{font-size:.78rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin:16px 0 6px;}
+
+.star-row{display:flex;gap:8px;margin-bottom:4px;}
+.star-btn{background:none;border:none;font-size:1.6rem;cursor:pointer;color:#e2e8f0;transition:.15s;line-height:1;}
+.star-btn.active{color:#f59e0b;}
+.star-btn:hover{color:#fbbf24;transform:scale(1.15);}
+
+.chip-row{display:flex;gap:8px;flex-wrap:wrap;}
+.chip{padding:6px 14px;border-radius:20px;border:1.5px solid #e2e8f0;font-size:.82rem;font-weight:600;cursor:pointer;transition:.2s;background:#fff;color:#64748b;}
+.chip:hover,.chip.active{border-color:#1d4ed8;color:#1d4ed8;background:#eff6ff;}
+
+select.fb-select, input.fb-input, textarea.fb-textarea{width:100%;box-sizing:border-box;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:.9rem;font-family:inherit;transition:.2s;}
+select.fb-select:focus, input.fb-input:focus, textarea.fb-textarea:focus{outline:none;border-color:#1d4ed8;}
+textarea.fb-textarea{resize:vertical;min-height:110px;}
+
+.submit-btn{width:100%;padding:14px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#fff;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;margin-top:20px;transition:.2s;}
+.submit-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(29,78,216,.4);}
+.submit-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+
+.success-card{background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:1.5px solid #6ee7b7;border-radius:16px;padding:32px;text-align:center;display:none;}
+.success-card .icon{font-size:3rem;margin-bottom:12px;}
+.success-card h3{font-size:1.3rem;font-weight:800;color:#065f46;margin:0 0 8px;}
+.success-card p{font-size:.9rem;color:#047857;margin:0;}
+
+.fb-sidebar{display:flex;flex-direction:column;gap:16px;}
+
+.stats-card{background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.08);padding:24px;}
+.stats-card h3{font-size:.95rem;font-weight:800;color:#1e293b;margin:0 0 16px;}
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f1f5f9;}
+.stat-row:last-child{border:none;}
+.sr-label{font-size:.82rem;color:#64748b;font-weight:500;}
+.sr-val{font-size:.9rem;font-weight:800;color:#1d4ed8;}
+
+.rating-bar-row{margin-bottom:10px;}
+.rb-label{display:flex;justify-content:space-between;font-size:.78rem;color:#64748b;margin-bottom:4px;}
+.rb-bg{background:#f1f5f9;border-radius:6px;height:8px;overflow:hidden;}
+.rb-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,#1d4ed8,#60a5fa);transition:width .6s ease;}
+
+.tool-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.tool-chip{padding:4px 10px;border-radius:10px;font-size:.75rem;font-weight:600;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;}
+
+.tips-card{background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:16px;padding:20px;}
+.tips-card h4{font-size:.9rem;font-weight:800;color:#92400e;margin:0 0 10px;}
+.tips-card ul{margin:0;padding-left:16px;font-size:.82rem;color:#b45309;line-height:1.8;}
+
+@media(max-width:768px){.fb-layout{grid-template-columns:1fr;}}
+</style>
+{% endblock %}
+{% block content %}
+<div class="fb-hero">
+  <div class="ud-badge">💬 Feedback Loop System</div>
+  <h1>Help Us Build a Better EduBridge</h1>
+  <p style="opacity:.85;margin:0;font-size:.95rem;">Your feedback directly shapes our AI models and features</p>
+</div>
+
+<div class="fb-main">
+  <div class="fb-layout">
+    <!-- LEFT: Form -->
+    <div>
+      <div class="fb-form-card" id="formCard">
+        <h2>Share Your Experience</h2>
+        <p>We read every submission — your insights improve EduBridge for 10,000+ students.</p>
+
+        <div class="fl">Overall Rating</div>
+        <div class="star-row" id="starRow">
+          <button class="star-btn" data-val="1" onclick="setRating(1)">★</button>
+          <button class="star-btn" data-val="2" onclick="setRating(2)">★</button>
+          <button class="star-btn" data-val="3" onclick="setRating(3)">★</button>
+          <button class="star-btn" data-val="4" onclick="setRating(4)">★</button>
+          <button class="star-btn" data-val="5" onclick="setRating(5)">★</button>
+        </div>
+        <div id="ratingLabel" style="font-size:.82rem;color:#64748b;margin-bottom:4px;">Click to rate</div>
+
+        <div class="fl">Feedback Category</div>
+        <div class="chip-row" id="categoryChips">
+          <button class="chip" onclick="selectChip(this,'category')">AI Response Quality</button>
+          <button class="chip" onclick="selectChip(this,'category')">University Data Accuracy</button>
+          <button class="chip" onclick="selectChip(this,'category')">Feature Request</button>
+          <button class="chip" onclick="selectChip(this,'category')">Bug Report</button>
+          <button class="chip" onclick="selectChip(this,'category')">UI/UX Feedback</button>
+          <button class="chip" onclick="selectChip(this,'category')">General Feedback</button>
+        </div>
+
+        <div class="fl">Which Tool Are You Reviewing?</div>
+        <select class="fb-select" id="toolSelect">
+          <option value="General">Select a tool (optional)</option>
+          <option>Career Navigator</option>
+          <option>ROI Calculator</option>
+          <option>Admission Predictor</option>
+          <option>Timeline Generator</option>
+          <option>Loan Planner</option>
+          <option>University Comparison</option>
+          <option>Application Strategy</option>
+          <option>Peer Benchmarking</option>
+          <option>Analytics Dashboard</option>
+          <option>EduMentor Chatbot</option>
+          <option>University Database</option>
+          <option>Interview Prep</option>
+          <option>Learning Path</option>
+          <option>Document Vault</option>
+          <option>Community Forum</option>
+          <option>Admission Tracker</option>
+        </select>
+
+        <div class="fl">Your Feedback</div>
+        <textarea class="fb-textarea" id="messageInput" placeholder="Tell us what you think — what worked well, what didn't, or what feature you'd love to see next..."></textarea>
+
+        <div class="fl">Email (optional — for follow-up)</div>
+        <input type="email" class="fb-input" id="emailInput" placeholder="your@email.com" />
+
+        <button class="submit-btn" id="submitBtn" onclick="submitFeedback()">
+          <i class="fas fa-paper-plane"></i> Submit Feedback (+15 XP)
+        </button>
+      </div>
+
+      <div class="success-card" id="successCard">
+        <div class="icon">🎉</div>
+        <h3>Thank You for Your Feedback!</h3>
+        <p>You earned <strong>+15 XP</strong> and the <strong>💬 Contributor Badge</strong>.<br>Our team will review your feedback within 48 hours.</p>
+        <button onclick="resetForm()" style="margin-top:16px;padding:10px 24px;background:#065f46;color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:.9rem;">Submit More Feedback</button>
+      </div>
+
+      <!-- Quick Tool Ratings -->
+      <div class="fb-form-card" style="margin-top:20px;">
+        <h2>Quick Tool Ratings</h2>
+        <p>Rate individual tools in 1 click — takes 10 seconds.</p>
+        <div id="toolRatingsList"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Sidebar -->
+    <div class="fb-sidebar">
+      <div class="stats-card">
+        <h3><i class="fas fa-chart-bar" style="color:#1d4ed8;"></i> Platform Insights</h3>
+        <div id="statsContent">
+          <div class="stat-row"><span class="sr-label">Total Submissions</span><span class="sr-val" id="statTotal">—</span></div>
+          <div class="stat-row"><span class="sr-label">Avg Rating</span><span class="sr-val" id="statAvg">—</span></div>
+          <div class="stat-row"><span class="sr-label">AI Accuracy Score</span><span class="sr-val">94.2%</span></div>
+          <div class="stat-row"><span class="sr-label">Features Shipped</span><span class="sr-val">12 this month</span></div>
+        </div>
+      </div>
+
+      <div class="stats-card">
+        <h3><i class="fas fa-star" style="color:#f59e0b;"></i> Rating Breakdown</h3>
+        <div id="ratingBreakdown">
+          <div class="rating-bar-row"><div class="rb-label"><span>5 ★</span><span>67%</span></div><div class="rb-bg"><div class="rb-fill" style="width:67%"></div></div></div>
+          <div class="rating-bar-row"><div class="rb-label"><span>4 ★</span><span>22%</span></div><div class="rb-bg"><div class="rb-fill" style="width:22%"></div></div></div>
+          <div class="rating-bar-row"><div class="rb-label"><span>3 ★</span><span>7%</span></div><div class="rb-bg"><div class="rb-fill" style="width:7%;background:linear-gradient(90deg,#f59e0b,#fbbf24);"></div></div></div>
+          <div class="rating-bar-row"><div class="rb-label"><span>2 ★</span><span>3%</span></div><div class="rb-bg"><div class="rb-fill" style="width:3%;background:linear-gradient(90deg,#dc2626,#f87171);"></div></div></div>
+          <div class="rating-bar-row"><div class="rb-label"><span>1 ★</span><span>1%</span></div><div class="rb-bg"><div class="rb-fill" style="width:1%;background:linear-gradient(90deg,#dc2626,#f87171);"></div></div></div>
+        </div>
+      </div>
+
+      <div class="stats-card">
+        <h3><i class="fas fa-lightbulb" style="color:#f59e0b;"></i> Recently Implemented</h3>
+        <ul style="margin:0;padding-left:16px;font-size:.83rem;color:#475569;line-height:2;">
+          <li>AI Interview Practice with scoring</li>
+          <li>Community Forum with AI answers</li>
+          <li>Adaptive Learning Path engine</li>
+          <li>University Data Sync (30+ unis)</li>
+          <li>Document Vault with AI improvement</li>
+        </ul>
+      </div>
+
+      <div class="tips-card">
+        <h4>💡 Your Feedback Powers EduBridge</h4>
+        <ul>
+          <li>AI models are retrained monthly using feedback signals</li>
+          <li>Top-voted feature requests are prioritized</li>
+          <li>Bug reports are fixed within 24-48 hours</li>
+          <li>Contributors get early access to beta features</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+let selectedRating = 0;
+let selectedCategory = '';
+const ratingLabels = ['','Terrible','Poor','Okay','Good','Excellent!'];
+
+function setRating(val) {
+  selectedRating = val;
+  document.querySelectorAll('.star-btn').forEach((btn,i) => {
+    btn.classList.toggle('active', i < val);
+  });
+  document.getElementById('ratingLabel').textContent = ratingLabels[val];
+}
+
+function selectChip(el, group) {
+  document.querySelectorAll('#categoryChips .chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  selectedCategory = el.textContent;
+}
+
+async function submitFeedback() {
+  const message = document.getElementById('messageInput').value.trim();
+  if (!selectedRating) { alert('Please select a star rating.'); return; }
+  if (!message) { alert('Please enter your feedback message.'); return; }
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = 'Submitting...';
+  try {
+    const res = await fetch('/api/feedback/submit', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        rating: selectedRating,
+        category: selectedCategory || 'General Feedback',
+        tool: document.getElementById('toolSelect').value,
+        message,
+        email: document.getElementById('emailInput').value,
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('formCard').style.display = 'none';
+      document.getElementById('successCard').style.display = 'block';
+      if(window.awardXP) awardXP(data.xp_gained || 15);
+      loadStats();
+    }
+  } catch(e) { alert('Error submitting. Please try again.'); }
+  btn.disabled = false;
+}
+
+function resetForm() {
+  selectedRating = 0; selectedCategory = '';
+  document.getElementById('formCard').style.display = 'block';
+  document.getElementById('successCard').style.display = 'none';
+  document.getElementById('messageInput').value = '';
+  document.getElementById('emailInput').value = '';
+  document.querySelectorAll('.star-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  document.getElementById('ratingLabel').textContent = 'Click to rate';
+  document.getElementById('submitBtn').disabled = false;
+  document.getElementById('submitBtn').innerHTML = '<i class="fas fa-paper-plane"></i> Submit Feedback (+15 XP)';
+}
+
+async function loadStats() {
+  try {
+    const res = await fetch('/api/feedback/stats');
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('statTotal').textContent = data.total_feedback;
+      document.getElementById('statAvg').textContent = '★ ' + (data.avg_rating || 4.8);
+    }
+  } catch(e) {}
+}
+
+const TOOLS = ['Career Navigator','ROI Calculator','Admission Predictor','Interview Prep','Loan Planner','AI Mentor Chatbot','Community Forum'];
+function loadToolRatings() {
+  const container = document.getElementById('toolRatingsList');
+  container.innerHTML = TOOLS.map(t => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f1f5f9;">
+      <span style="font-size:.85rem;font-weight:600;color:#1e293b;">${t}</span>
+      <div style="display:flex;gap:4px;">
+        ${[1,2,3,4,5].map(n => `<button onclick="rateTool('${t}',${n},this)" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:#e2e8f0;transition:.15s;" class="tool-star" data-tool="${t}" data-val="${n}">★</button>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+async function rateTool(tool, score, el) {
+  const btns = document.querySelectorAll(`[data-tool="${tool}"]`);
+  btns.forEach((b,i) => b.style.color = i < score ? '#f59e0b' : '#e2e8f0');
+  await fetch('/api/feedback/rate-tool', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({tool, score})
+  });
+}
+
+loadStats();
+loadToolRatings();
+</script>
+{% endblock %}
